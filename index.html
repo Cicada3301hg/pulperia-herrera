@@ -609,10 +609,8 @@ aplicarFiltros();
 actualizarCarrito();
 }
 
-fetch(URL_API_GOOGLE, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'obtenerCatalogo' })
-})
+// 👇 EL CAMBIO CLAVE: Ahora usamos GET para evitar el bloqueo CORS de los navegadores 👇
+fetch(URL_API_GOOGLE + '?action=obtenerCatalogo')
 .then(response => response.json())
 .then(function(resp) {
     if (!resp.success) {
