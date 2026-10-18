@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pulperia-v2';
+const CACHE_NAME = 'pulperia-v3'; // Subimos a v3 para forzar la limpieza
 const urlsToCache = [
   './',
   './index.html',
@@ -6,7 +6,6 @@ const urlsToCache = [
   './icono-512.png'
 ];
 
-// Forzar la instalación del nuevo Service Worker
 self.addEventListener('install', event => {
   self.skipWaiting(); 
   event.waitUntil(
@@ -14,7 +13,6 @@ self.addEventListener('install', event => {
   );
 });
 
-// Borrar las cachés viejas automáticamente
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -29,7 +27,6 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Buscar en internet primero, y si no hay internet, usar el caché
 self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)
