@@ -7,7 +7,6 @@
 <meta name="theme-color" content="#1A2942">
 <title>Catálogo - Pulpería Herrera</title>
 
-<!-- 👇 Hace que la app sea instalable y se vea a pantalla completa -->
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -462,8 +461,8 @@ Cerrar
 <div class="toast" id="toast"></div>
 
 <script>
-// 👇 AQUÍ ESTÁ TU URL OFICIAL DE GOOGLE APPS SCRIPT 👇
-const URL_API_GOOGLE = "https://script.google.com/macros/s/AKfycbztt4eUFxavudj3E_TbV2UcYBqZT_m-ODoJJtCqWUJFrDEZnf2Rzx09aDt263D4p2Vjmg/exec"; 
+// 👇 AQUÍ ESTÁ TU NUEVA URL OFICIAL DE GOOGLE APPS SCRIPT 👇
+const URL_API_GOOGLE = "https://script.google.com/macros/s/AKfycbwS3zwDj7NU1l4P580O2c28oVTi0y1OrY-iLB-PiXMU5KyoYpr2mRRz0LTcmWDuqRhalg/exec"; 
 
 const WHATSAPP_NUM = '50661446321';
 const STORAGE_KEY = 'carrito_ph_v1';
@@ -609,8 +608,15 @@ aplicarFiltros();
 actualizarCarrito();
 }
 
-// 👇 EL CAMBIO CLAVE: Ahora usamos GET para evitar el bloqueo CORS de los navegadores 👇
-fetch(URL_API_GOOGLE + '?action=obtenerCatalogo')
+// 👇 EL CAMBIO CLAVE: Ahora usamos POST con Content-Type text/plain y redirect follow 👇
+fetch(URL_API_GOOGLE, {
+    method: 'POST',
+    redirect: 'follow',
+    headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify({ action: 'obtenerCatalogo' })
+})
 .then(response => response.json())
 .then(function(resp) {
     if (!resp.success) {
@@ -1399,7 +1405,6 @@ document.getElementById('confirmOverlay').addEventListener('click', function(ev)
 if (ev.target === this) cerrarConfirm();
 });
 
-// 👇 ESTO ES NUEVO: Registra la app para que sea instalable 👇
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(function(err) { console.log('SW error:', err); });
 }
