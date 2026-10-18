@@ -21,12 +21,21 @@ body { font-family: 'Inter', system-ui, -apple-system, sans-serif;min-height: 10
 body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 .header {
 position: sticky; top: 0; z-index: 50;
-padding: 20px 16px 25px; /* Un poco más de espacio abajo para la curva */
-background: rgba(26, 41, 66, 0.85); 
+padding: 20px 16px 20px;
+background: transparent;
+}
+.header::before {
+content: '';
+position: absolute;
+inset: 0;
+bottom: -30px;
+background: linear-gradient(180deg, rgba(26, 41, 66, 1) 0%, rgba(26, 41, 66, 0.95) 60%, rgba(26, 41, 66, 0) 100%);
 backdrop-filter: blur(20px);
 -webkit-backdrop-filter: blur(20px);
--webkit-mask-image: radial-gradient(ellipse 120% 100% at 50% 0%, black 75%, transparent 100%);
-mask-image: radial-gradient(ellipse 120% 100% at 50% 0%, black 75%, transparent 100%);
+-webkit-mask-image: radial-gradient(ellipse 140% 100% at 50% 0%, black 75%, transparent 100%);
+mask-image: radial-gradient(ellipse 140% 100% at 50% 0%, black 75%, transparent 100%);
+z-index: -1;
+pointer-events: none;
 }
 .header-top { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 18px; max-width: 720px; margin-left: auto; margin-right: auto; position: relative; }
 .header-top::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 60px; height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(232, 184, 90, 0.6) 50%, transparent 100%); pointer-events: none; }
