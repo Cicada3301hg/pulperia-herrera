@@ -19,7 +19,15 @@
 html { -webkit-tap-highlight-color: transparent; background: var(--bg-deep); }
 body { font-family: 'Inter', system-ui, -apple-system, sans-serif;min-height: 100vh;color: var(--ink);padding-bottom: 140px;overflow-x: hidden;background: radial-gradient(ellipse 140% 70% at 50% -10%, #34496F 0%, transparent 55%), radial-gradient(ellipse 100% 50% at 50% 110%, #253759 0%, transparent 60%), linear-gradient(180deg, #253759 0%, #1A2942 100%);background-attachment: fixed;font-feature-settings: 'cv11', 'ss01';letter-spacing: -0.01em;}
 body.modal-open { overflow: hidden; position: fixed; width: 100%; }
-.header { position: sticky; top: 0; z-index: 50;padding: 20px 16px 16px;background: linear-gradient(180deg, rgba(26, 41, 66, 0.94) 0%, rgba(26, 41, 66, 0.85) 70%, rgba(26, 41, 66, 0) 100%);backdrop-filter: blur(20px);-webkit-backdrop-filter: blur(20px);border-bottom: 1px solid var(--border);}
+.header {
+position: sticky; top: 0; z-index: 50;
+padding: 20px 16px 25px; /* Un poco más de espacio abajo para la curva */
+background: rgba(26, 41, 66, 0.85); 
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+-webkit-mask-image: radial-gradient(ellipse 120% 100% at 50% 0%, black 75%, transparent 100%);
+mask-image: radial-gradient(ellipse 120% 100% at 50% 0%, black 75%, transparent 100%);
+}
 .header-top { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 18px; max-width: 720px; margin-left: auto; margin-right: auto; position: relative; }
 .header-top::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 60px; height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(232, 184, 90, 0.6) 50%, transparent 100%); pointer-events: none; }
 .brand-icon { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; color: var(--gold); filter: drop-shadow(0 2px 6px rgba(232, 184, 90, 0.35)); flex-shrink: 0; }
