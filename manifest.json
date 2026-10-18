@@ -1,0 +1,21 @@
+{
+  "name": "Pulpería Herrera",
+  "short_name": "Pulpería",
+  "description": "Catálogo y pedidos de Pulpería Herrera",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1A2942",
+  "theme_color": "#1A2942",
+  "icons": [
+    {
+      "src": "icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
