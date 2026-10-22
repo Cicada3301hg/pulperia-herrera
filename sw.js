@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pulperia-v3'; // Subimos a v3 para forzar la limpieza
+const CACHE_NAME = 'pulperia-v7'; // Subimos la versión
 const urlsToCache = [
   './',
   './index.html',
