@@ -627,8 +627,9 @@ iaResponseCard.classList.add('show');
 iaResponseContent.innerHTML = '<div class="ia-response-loading"><div class="ia-spinner"></div> Consultando el inventario...</div>';
 grid.style.display = 'none';
 
-fetch(URL_API_GOOGLE + '?action=consultarIA', {
+fetch(URL_API_GOOGLE, {
     method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action: 'consultarIA', pregunta: pregunta })
 })
 .then(response => response.json())
