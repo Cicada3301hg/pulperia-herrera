@@ -627,16 +627,20 @@ function consultarIAApp(pregunta) {
     fetch(URL_API_GOOGLE + '?action=consultarIA&pregunta=' + encodeURIComponent(pregunta))
     .then(response => response.json())
    .then(function(resp) {
-    grid.style.display = 'grid';
     if (resp.success) {
         iaResponseContent.innerText = resp.respuesta;
-        // MAGIA: Si la IA devuelve productos, los pintamos en la grilla
+        // Si la IA devuelve productos, los pintamos
         if (resp.productos && resp.productos.length > 0) {
             productosFiltrados = resp.productos;
+            grid.style.display = 'grid';
             renderGrid(); 
+        } else {
+            // Si la IA dice "No hay" y no devuelve productos, ocultamos la grilla
+            grid.style.display = 'none';
         }
     } else {
         iaResponseContent.innerText = "Lo siento, en este momento no puedo procesar la consulta. " + (resp.message || '');
+        grid.style.display = 'grid';
     }
 })
     .catch(function(err) {
