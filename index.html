@@ -626,14 +626,19 @@ function consultarIAApp(pregunta) {
 
     fetch(URL_API_GOOGLE + '?action=consultarIA&pregunta=' + encodeURIComponent(pregunta))
     .then(response => response.json())
-    .then(function(resp) {
-        grid.style.display = 'grid';
-        if (resp.success) {
-            iaResponseContent.innerText = resp.respuesta;
-        } else {
-            iaResponseContent.innerText = "Lo siento, en este momento no puedo procesar la consulta. " + (resp.message || '');
+   .then(function(resp) {
+    grid.style.display = 'grid';
+    if (resp.success) {
+        iaResponseContent.innerText = resp.respuesta;
+        // MAGIA: Si la IA devuelve productos, los pintamos en la grilla
+        if (resp.productos && resp.productos.length > 0) {
+            productosFiltrados = resp.productos;
+            renderGrid(); 
         }
-    })
+    } else {
+        iaResponseContent.innerText = "Lo siento, en este momento no puedo procesar la consulta. " + (resp.message || '');
+    }
+})
     .catch(function(err) {
         grid.style.display = 'grid';
         iaResponseContent.innerText = "Error de conexión al buscar con la IA.";
