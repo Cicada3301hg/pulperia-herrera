@@ -669,9 +669,9 @@ function cargarCatalogo() {
       }
       return;
     }
-    productos = (resp.productos || []).map(function(p) {
-      return { nombre: p.nombre, precio: p.precio, foto: p.foto, categoria: p.categoria, estado: p.estado, stock: p.stock };
-    });
+   productos = (resp.productos || []).map(function(p) {
+  return { nombre: p.nombre, precio: p.precio, foto: p.foto, categoria: p.categoria, estado: p.estado, stock: p.stock, etiquetas: p.etiquetas };
+});
     guardarCatalogoCache(productos);
     sincronizarCarritoConCatalogo();
     construirCategorias();
