@@ -730,32 +730,65 @@ function aplicarFiltros() {
   const q = busqueda.trim().toLowerCase();
   const qNormalizada = normalizarTexto(q);
 
-  productosFiltrados = productos.filter(function(p) {
-    if (categoriaActiva !== 'Todas' && p.categoria !== categoriaActiva) return false;
-    
-    if (qNormalizada) {
-      // Separamos la búsqueda en palabras (ej. "refrescos" o "coca cola")
-      const palabrasBusqueda = qNormalizada.split(' ').filter(function(w) { return w.length > 1; });
-      
+  // Función auxiliar para quitar plurales (ej. "refrescos" -> "refresco")
+  function obtenerRaiz(texto) {
+    return (texto.length > 3 && texto.endsWith('s')) ? texto.slice(0, -1) : texto;
+  }
+
+  // Primero filtramos por categoría
+  let resultadosBase = productos.filter(function(p) {
+    return (categoriaActiva === 'Todas' || p.categoria === categoriaActiva);
+  });
+
+  if (!qNormalizada) {
+    productosFiltrados = resultadosBase;
+  } else {
+    // Separamos la búsqueda en palabras sueltas
+    const palabras = qNormalizada.split(' ').filter(function(w) { return w.length > 1; });
+
+    // Puntuamos cada producto
+    let productosPuntuados = resultadosBase.map(function(p) {
+      let puntos = 0;
       const nombreNorm = normalizarTexto(p.nombre);
       const categoriaNorm = normalizarTexto(p.categoria || '');
       const etiquetasNorm = normalizarTexto(p.etiquetas || '');
-      
-      // Verificamos que TODAS las palabras buscadas coincidan
-      const coincideTodo = palabrasBusqueda.every(function(palabra) {
-         // Magia anti-plural: si termina en 's' y tiene más de 3 letras, le quitamos la 's'
-         const raiz = (palabra.length > 3 && palabra.endsWith('s')) ? palabra.slice(0, -1) : palabra;
-         
-         return nombreNorm.indexOf(raiz) !== -1 || 
-                categoriaNorm.indexOf(raiz) !== -1 || 
-                etiquetasNorm.indexOf(raiz) !== -1;
+
+      // Evaluar cada palabra que escribió el usuario
+      palabras.forEach(function(palabra) {
+        const raiz = obtenerRaiz(palabra);
+
+        // ¿Está en el nombre? (Alta prioridad)
+        if (nombreNorm.indexOf(raiz) !== -1) {
+          puntos += 100;
+        } 
+        // ¿Está en la categoría? (Media prioridad)
+        else if (categoriaNorm.indexOf(raiz) !== -1) {
+          puntos += 50;
+        }
+        // ¿Está en las etiquetas? (Baja prioridad)
+        else if (etiquetasNorm.indexOf(raiz) !== -1) {
+          puntos += 10;
+        }
       });
-      
-      if (!coincideTodo) return false;
-    }
-    return true;
-  });
-  
+
+      return { producto: p, puntos: puntos };
+    });
+
+    // Nos quedamos solo con los que sumaron al menos 1 punto y los ordenamos del más relevante al menos
+    productosPuntuados = productosPuntuados.filter(function(item) {
+      return item.puntos > 0;
+    });
+
+    productosPuntuados.sort(function(a, b) {
+      return b.puntos - a.puntos;
+    });
+
+    // Extraemos solo los productos ordenados
+    productosFiltrados = productosPuntuados.map(function(item) {
+      return item.producto;
+    });
+  }
+
   renderGrid();
 }
 
