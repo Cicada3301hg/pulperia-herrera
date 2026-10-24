@@ -630,7 +630,6 @@ function consultarIAApp(pregunta) {
         iaResponseContent.innerText = resp.respuesta;
         
         if (resp.productos && resp.productos.length > 0) {
-          // Tanto si es catálogo completo como respuesta IA, mostramos las tarjetas
           productosFiltrados = resp.productos;
           grid.style.display = 'grid';
           renderGrid(); 
@@ -647,51 +646,44 @@ function consultarIAApp(pregunta) {
       iaResponseContent.innerText = "Error de conexión al buscar con la IA.";
     });
 }
-    .catch(function(err) {
-        grid.style.display = 'grid';
-        iaResponseContent.innerText = "Error de conexión al buscar con la IA.";
-    });
-}
 
 function cargarCatalogo() {
-const cacheLocal = leerCatalogoCache();
-if (cacheLocal && cacheLocal.length) {
-productos = cacheLocal;
-sincronizarCarritoConCatalogo();
-construirCategorias();
-aplicarFiltros();
-actualizarCarrito();
-}
-
-fetch(URL_API_GOOGLE, {
+  const cacheLocal = leerCatalogoCache();
+  if (cacheLocal && cacheLocal.length) {
+    productos = cacheLocal;
+    sincronizarCarritoConCatalogo();
+    construirCategorias();
+    aplicarFiltros();
+    actualizarCarrito();
+  }
+  fetch(URL_API_GOOGLE, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action: 'obtenerCatalogo' })
-})
-.then(response => response.json())
-.then(function(resp) {
+  })
+  .then(response => response.json())
+  .then(function(resp) {
     if (!resp.success) {
-        if (!cacheLocal || !cacheLocal.length) {
-            grid.innerHTML = '<div class="empty"><strong>Error</strong>' + escaparHTML(resp.message) + '</div>';
-        }
-        return;
+      if (!cacheLocal || !cacheLocal.length) {
+        grid.innerHTML = '<div class="empty"><strong>Error</strong>' + escaparHTML(resp.message) + '</div>';
+      }
+      return;
     }
     productos = (resp.productos || []).map(function(p) {
-        return { nombre: p.nombre, precio: p.precio, foto: p.foto, categoria: p.categoria, estado: p.estado, stock: p.stock };
+      return { nombre: p.nombre, precio: p.precio, foto: p.foto, categoria: p.categoria, estado: p.estado, stock: p.stock };
     });
     guardarCatalogoCache(productos);
     sincronizarCarritoConCatalogo();
     construirCategorias();
     aplicarFiltros();
     actualizarCarrito();
-})
-.catch(function(err) {
+  })
+  .catch(function(err) {
     if (!cacheLocal || !cacheLocal.length) {
-        grid.innerHTML = '<div class="empty"><strong>Error de conexión</strong>' + escaparHTML(err) + '</div>';
+      grid.innerHTML = '<div class="empty"><strong>Error de conexión</strong>' + escaparHTML(err) + '</div>';
     }
-});
+  });
 }
-
 function sincronizarCarritoConCatalogo() {
 const mapa = {};
 productos.forEach(function(p) { mapa[p.nombre] = p; });
