@@ -620,29 +620,33 @@ return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 // CONEXIÓN CON LA IA (GET PARA EVITAR CORS)
 // ============================================================
 function consultarIAApp(pregunta) {
-    iaResponseCard.classList.add('show');
-    iaResponseContent.innerHTML = '<div class="ia-response-loading"><div class="ia-spinner"></div> Consultando el inventario...</div>';
-    grid.style.display = 'none';
-
-    fetch(URL_API_GOOGLE + '?action=consultarIA&pregunta=' + encodeURIComponent(pregunta))
+  iaResponseCard.classList.add('show');
+  iaResponseContent.innerHTML = '<div class="ia-response-loading"><div class="ia-spinner"></div> Consultando el catálogo...</div>';
+  
+  fetch(URL_API_GOOGLE + '?action=consultarIA&pregunta=' + encodeURIComponent(pregunta))
     .then(response => response.json())
-   .then(function(resp) {
-    if (resp.success) {
+    .then(function(resp) {
+      if (resp.success) {
         iaResponseContent.innerText = resp.respuesta;
-        // Si la IA devuelve productos, los pintamos
+        
         if (resp.productos && resp.productos.length > 0) {
-            productosFiltrados = resp.productos;
-            grid.style.display = 'grid';
-            renderGrid(); 
+          // Tanto si es catálogo completo como respuesta IA, mostramos las tarjetas
+          productosFiltrados = resp.productos;
+          grid.style.display = 'grid';
+          renderGrid(); 
         } else {
-            // Si la IA dice "No hay" y no devuelve productos, ocultamos la grilla
-            grid.style.display = 'none';
+          grid.style.display = 'none';
         }
-    } else {
+      } else {
         iaResponseContent.innerText = "Lo siento, en este momento no puedo procesar la consulta. " + (resp.message || '');
         grid.style.display = 'grid';
-    }
-})
+      }
+    })
+    .catch(function(err) {
+      grid.style.display = 'grid';
+      iaResponseContent.innerText = "Error de conexión al buscar con la IA.";
+    });
+}
     .catch(function(err) {
         grid.style.display = 'grid';
         iaResponseContent.innerText = "Error de conexión al buscar con la IA.";
