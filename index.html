@@ -734,19 +734,28 @@ function aplicarFiltros() {
     if (categoriaActiva !== 'Todas' && p.categoria !== categoriaActiva) return false;
     
     if (qNormalizada) {
+      // Separamos la búsqueda en palabras (ej. "refrescos" o "coca cola")
+      const palabrasBusqueda = qNormalizada.split(' ').filter(function(w) { return w.length > 1; });
+      
       const nombreNorm = normalizarTexto(p.nombre);
       const categoriaNorm = normalizarTexto(p.categoria || '');
       const etiquetasNorm = normalizarTexto(p.etiquetas || '');
       
-      // El buscador ahora mira en nombre, categoría o etiquetas
-      const coincide = nombreNorm.indexOf(qNormalizada) !== -1 || 
-                       categoriaNorm.indexOf(qNormalizada) !== -1 || 
-                       etiquetasNorm.indexOf(qNormalizada) !== -1;
-                       
-      if (!coincide) return false;
+      // Verificamos que TODAS las palabras buscadas coincidan
+      const coincideTodo = palabrasBusqueda.every(function(palabra) {
+         // Magia anti-plural: si termina en 's' y tiene más de 3 letras, le quitamos la 's'
+         const raiz = (palabra.length > 3 && palabra.endsWith('s')) ? palabra.slice(0, -1) : palabra;
+         
+         return nombreNorm.indexOf(raiz) !== -1 || 
+                categoriaNorm.indexOf(raiz) !== -1 || 
+                etiquetasNorm.indexOf(raiz) !== -1;
+      });
+      
+      if (!coincideTodo) return false;
     }
     return true;
   });
+  
   renderGrid();
 }
 
