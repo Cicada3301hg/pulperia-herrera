@@ -727,18 +727,27 @@ aplicarFiltros();
 }
 
 function aplicarFiltros() {
-const q = busqueda.trim().toLowerCase();
-const qNormalizada = normalizarTexto(q);
+  const q = busqueda.trim().toLowerCase();
+  const qNormalizada = normalizarTexto(q);
 
-productosFiltrados = productos.filter(function(p) {
-if (categoriaActiva !== 'Todas' && p.categoria !== categoriaActiva) return false;
-if (qNormalizada) {
-    const nombreNormalizado = normalizarTexto(p.nombre);
-    if (nombreNormalizado.indexOf(qNormalizada) === -1) return false;
-}
-return true;
-});
-renderGrid();
+  productosFiltrados = productos.filter(function(p) {
+    if (categoriaActiva !== 'Todas' && p.categoria !== categoriaActiva) return false;
+    
+    if (qNormalizada) {
+      const nombreNorm = normalizarTexto(p.nombre);
+      const categoriaNorm = normalizarTexto(p.categoria || '');
+      const etiquetasNorm = normalizarTexto(p.etiquetas || '');
+      
+      // El buscador ahora mira en nombre, categoría o etiquetas
+      const coincide = nombreNorm.indexOf(qNormalizada) !== -1 || 
+                       categoriaNorm.indexOf(qNormalizada) !== -1 || 
+                       etiquetasNorm.indexOf(qNormalizada) !== -1;
+                       
+      if (!coincide) return false;
+    }
+    return true;
+  });
+  renderGrid();
 }
 
 function renderGrid() {
