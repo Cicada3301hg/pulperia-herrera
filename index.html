@@ -725,45 +725,115 @@ function setCategoria(cat) {
   lastY = 0;
   aplicarFiltros();
 }
-function aplicarFiltros() {
-  const q = busqueda.trim().toLowerCase();
-  const qNormalizada = normalizarTexto(q);
-  function obtenerRaiz(texto) {
-    return (texto.length > 3 && texto.endsWith('s')) ? texto.slice(0, -1) : texto;
+const PALABRAS_VACIAS = new Set(['necesito','necesita','necesitamos','quiero','quisiera','busco','buscando','algo','alguna','alguno','para','hacer','hacerme','tienen','tiene','hay','venden','vende','me','un','una','unos','unas','el','la','los','las','de','del','por','favor','porfa','dame','pasame','cuanto','cuesta','vale','precio','que','en','al','lo','mi','y','o','como','cosa','cosas','mas']);
+const SINONIMOS = {
+  arepa: ['masa','maiz'], tortilla: ['masa','maiz'], tamal: ['masa','maiz'],
+  soda: ['gaseosa','refresco'], gaseosa: ['refresco','cola'], refresco: ['gaseosa','fresco','jugo'],
+  fresco: ['refresco','jugo','tang','zuko'], bebida: ['refresco','gaseosa','jugo'], jugo: ['nectar','refresco'],
+  pelo: ['cabello'], cabello: ['pelo','shampoo','champu'], champu: ['shampoo'], shampoo: ['champu'],
+  diente: ['dental','cepillo'], muela: ['dental','cepillo'],
+  bebe: ['panal','colado','tetina'], nino: ['bebe','infantil'],
+  desayuno: ['cereal','avena','cafe','huevo','pan'], merienda: ['galleta','jugo','snack'], lonchera: ['jugo','galleta','merienda'],
+  boquita: ['snack'], snack: ['boquita'], chucheria: ['golosina','dulce','confite','snack'],
+  dulce: ['golosina','confite'], golosina: ['dulce','confite'],
+  verdura: ['cebolla','papa','tomate','repollo','ajo'], fruta: ['manzana'], carne: ['res','cerdo','pollo'],
+  limpieza: ['cloro','jabon','detergente','escoba','pinol'], limpiar: ['cloro','jabon','detergente','escoba','pinol'],
+  lavar: ['detergente','jabon','lavaplatos','suavizante'], escuela: ['lapiz','borrador','tajador','escolar'], colegio: ['lapiz','borrador','tajador','escolar'],
+  fosforo: ['encendedor','yesquero'], yesquero: ['encendedor','fosforo'], vela: ['candela'],
+  mantequilla: ['margarina'], margarina: ['mantequilla'], arroc: ['arroz'],
+  dolor: ['acetaminofen','advil','aspirina','ibuprofeno','diclofenaco'], gripe: ['antigripal','tabcin'],
+  fiebre: ['acetaminofen','panadol'], estomago: ['alka','antiacido']
+};
+const indiceBusqueda = new WeakMap();
+function palabrasDe(texto) {
+  return normalizarTexto(texto).split(/[^a-z0-9]+/).filter(Boolean);
+}
+function datosBusqueda(p) {
+  let d = indiceBusqueda.get(p);
+  if (!d) {
+    d = {
+      nombre: palabrasDe(p.nombre + ' ' + (p.nombreApp || '')),
+      categoria: palabrasDe(p.categoria || ''),
+      etiquetas: palabrasDe(p.etiquetas || '')
+    };
+    indiceBusqueda.set(p, d);
   }
-  let resultadosBase = productos.filter(function(p) {
+  return d;
+}
+function raizPalabra(w) {
+  if (w.length > 4 && w.endsWith('es')) return w.slice(0, -2);
+  if (w.length > 3 && w.endsWith('s')) return w.slice(0, -1);
+  return w;
+}
+function calidadCoincidencia(palabras, t) {
+  let mejor = 0;
+  for (let i = 0; i < palabras.length; i++) {
+    const w = palabras[i];
+    if (w === t) return 3;
+    if (w.startsWith(t)) {
+      const q = t.length >= 5 ? 2 : (t.length === 4 ? 1 : (t.length === 3 ? 0.5 : 0));
+      if (q > mejor) mejor = q;
+    } else if (t.length >= 5 && w.indexOf(t) !== -1) {
+      if (mejor < 1) mejor = 1;
+    }
+  }
+  return mejor;
+}
+function puntosTermino(d, alternativas) {
+  let mejor = 0;
+  alternativas.forEach(function(alt) {
+    const t = alt.t;
+    let pNombre = calidadCoincidencia(d.nombre, t) * 30;
+    if (pNombre > 0 && d.nombre[0].startsWith(t)) pNombre += 15; // bonus si es la primera palabra del nombre
+    const p = Math.max(
+      pNombre,
+      calidadCoincidencia(d.categoria, t) * 15,
+      calidadCoincidencia(d.etiquetas, t) * 20
+    ) * alt.factor;
+    if (p > mejor) mejor = p;
+  });
+  return mejor;
+}
+function aplicarFiltros() {
+  const qNormalizada = normalizarTexto(busqueda.trim());
+  // al buscar, se busca en todo el catálogo (no solo en la categoría marcada)
+  if (qNormalizada && categoriaActiva !== 'Todas') {
+    categoriaActiva = 'Todas';
+    document.querySelectorAll('.cat-chip').forEach(function(el) {
+      el.classList.toggle('active', el.dataset.cat === 'Todas');
+    });
+  }
+  const resultadosBase = productos.filter(function(p) {
     return (categoriaActiva === 'Todas' || p.categoria === categoriaActiva);
   });
   if (!qNormalizada) {
     productosFiltrados = resultadosBase;
   } else {
-    const palabras = qNormalizada.split(' ').filter(function(w) { return w.length > 1; });
-    let productosPuntuados = resultadosBase.map(function(p) {
-      let puntos = 0;
-      const nombreNorm = normalizarTexto(p.nombre + ' ' + (p.nombreApp || ''));
-      const categoriaNorm = normalizarTexto(p.categoria || '');
-      const etiquetasNorm = normalizarTexto(p.etiquetas || '');
-      palabras.forEach(function(palabra) {
-        const raiz = obtenerRaiz(palabra);
-        if (nombreNorm.indexOf(raiz) !== -1) {
-          puntos += 100;
-        } else if (categoriaNorm.indexOf(raiz) !== -1) {
-          puntos += 50;
-        } else if (etiquetasNorm.indexOf(raiz) !== -1) {
-          puntos += 10;
-        }
+    const crudas = palabrasDe(qNormalizada).filter(function(w) { return w.length > 1; });
+    let terminos = crudas.filter(function(w) { return !PALABRAS_VACIAS.has(w); });
+    if (terminos.length === 0) terminos = crudas;
+    const consulta = terminos.map(function(w) {
+      const raiz = raizPalabra(w);
+      const alts = [{ t: raiz, factor: 1 }];
+      if (w !== raiz) alts.push({ t: w, factor: 1 });
+      (SINONIMOS[raiz] || SINONIMOS[w] || []).forEach(function(s, i) { alts.push({ t: s, factor: i === 0 ? 0.8 : 0.5 }); });
+      return alts;
+    });
+    const minimo = consulta.length <= 2 ? 1 : Math.ceil(consulta.length / 2);
+    const puntuados = [];
+    resultadosBase.forEach(function(p) {
+      const d = datosBusqueda(p);
+      let total = 0, coinciden = 0;
+      consulta.forEach(function(alts) {
+        const pt = puntosTermino(d, alts);
+        if (pt > 0) { coinciden++; total += pt; }
       });
-      return { producto: p, puntos: puntos };
+      if (coinciden >= minimo) puntuados.push({ producto: p, coinciden: coinciden, total: total });
     });
-    productosPuntuados = productosPuntuados.filter(function(item) {
-      return item.puntos > 0;
+    puntuados.sort(function(a, b) {
+      return (b.coinciden - a.coinciden) || (b.total - a.total);
     });
-    productosPuntuados.sort(function(a, b) {
-      return b.puntos - a.puntos;
-    });
-    productosFiltrados = productosPuntuados.map(function(item) {
-      return item.producto;
-    });
+    productosFiltrados = puntuados.map(function(x) { return x.producto; });
   }
   renderGrid();
 }
@@ -1314,7 +1384,7 @@ document.addEventListener('DOMContentLoaded', function() {
     searchTimer = setTimeout(function() {
       busqueda = val;
       aplicarFiltros();
-    }, 500);
+    }, 250);
   });
   document.getElementById('pmMas').addEventListener('click', modalMas);
   document.getElementById('pmMenos').addEventListener('click', modalMenos);
