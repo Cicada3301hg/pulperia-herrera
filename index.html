@@ -740,7 +740,7 @@ function aplicarFiltros() {
     const palabras = qNormalizada.split(' ').filter(function(w) { return w.length > 1; });
     let productosPuntuados = resultadosBase.map(function(p) {
       let puntos = 0;
-      const nombreNorm = normalizarTexto(p.nombre);
+      const nombreNorm = normalizarTexto(p.nombre + ' ' + (p.nombreApp || ''));
       const categoriaNorm = normalizarTexto(p.categoria || '');
       const etiquetasNorm = normalizarTexto(p.etiquetas || '');
       palabras.forEach(function(palabra) {
@@ -843,7 +843,7 @@ function crearTarjeta(p) {
   body.className = 'card-body';
   const nombre = document.createElement('div');
   nombre.className = 'card-nombre';
-  nombre.innerText = p.nombre;
+  nombre.innerText = p.nombreApp || p.nombre;
   body.appendChild(nombre);
   const footer = document.createElement('div');
   footer.className = 'card-footer';
@@ -945,7 +945,7 @@ function agregarAlCarrito(p, mostrarToast) {
   actualizarCarrito();
   aplicarEstadoCarrito(p.id, true);
   actualizarTodasLasTarjetas();
-  if (mostrarToast) showToast('Agregado: ' + p.nombre, 'success');
+  if (mostrarToast) showToast('Agregado: ' + (p.nombreApp || p.nombre), 'success');
 }
 function quitarDelCarrito(id) {
   carrito = carrito.filter(function(it){ return it.id !== id; });
@@ -1083,7 +1083,7 @@ function renderModalProducto() {
     ph.innerHTML = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>';
     fotoWrap.appendChild(ph);
   }
-  document.getElementById('pmNombre').innerText = p.nombre;
+  document.getElementById('pmNombre').innerText = p.nombreApp || p.nombre;
   document.getElementById('pmPrecioUnit').innerText = fmt(p.precio) + ' c/u';
   const stockEl = document.getElementById('pmStock');
   if (p.stock === null || p.stock === undefined) { stockEl.innerText = 'Disponible'; stockEl.className = 'pm-stock'; }
@@ -1188,7 +1188,7 @@ function renderCarrito() {
     right.className = 'cart-item-right';
     const nombre = document.createElement('div');
     nombre.className = 'cart-item-nombre';
-    nombre.innerText = it.nombre;
+    nombre.innerText = it.nombreApp || it.nombre;
     right.appendChild(nombre);
     const divider = document.createElement('div');
     divider.className = 'cart-item-divider';
@@ -1232,7 +1232,7 @@ function abrirFormulario(e) {
   carrito.forEach(function(it) {
     const row = document.createElement('div');
     row.className = 'resumen-pedido-item';
-    row.innerHTML = '<span>' + it.cantidad + 'x ' + escaparHTML(it.nombre) + '</span><span>' + fmt(it.precio * it.cantidad) + '</span>';
+    row.innerHTML = '<span>' + it.cantidad + 'x ' + escaparHTML(it.nombreApp || it.nombre) + '</span><span>' + fmt(it.precio * it.cantidad) + '</span>';
     resumen.appendChild(row);
   });
   const totalRow = document.createElement('div');
@@ -1278,7 +1278,7 @@ function enviarPedido(e) {
   msg += '━━━━━━━━━━━━━━━\n\n';
   carrito.forEach(function(it, i) {
     const num = (i + 1) + '.';
-    msg += num + ' ' + it.cantidad + 'x ' + it.nombre + '\n';
+    msg += num + ' ' + it.cantidad + 'x ' + (it.nombreApp || it.nombre) + '\n';
     msg += ' ' + fmt(it.precio) + ' c/u · ' + fmt(it.precio * it.cantidad) + '\n\n';
   });
   msg += '━━━━━━━━━━━━━━━\n';
