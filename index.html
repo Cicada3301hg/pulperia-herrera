@@ -771,7 +771,8 @@ function calidadCoincidencia(palabras, t) {
     const w = palabras[i];
     if (w === t) return 3;
     if (w.startsWith(t)) {
-      const q = t.length >= 5 ? 2 : (t.length === 4 ? 1 : (t.length === 3 ? 0.5 : 0));
+      const base = t.length >= 5 ? 2 : (t.length === 4 ? 1 : 0.7);
+      const q = base * (0.5 + 0.5 * t.length / w.length);
       if (q > mejor) mejor = q;
     } else if (t.length >= 5 && w.indexOf(t) !== -1) {
       if (mejor < 1) mejor = 1;
@@ -806,7 +807,7 @@ function aplicarFiltros() {
   const resultadosBase = productos.filter(function(p) {
     return (categoriaActiva === 'Todas' || p.categoria === categoriaActiva);
   });
-  if (!qNormalizada) {
+  if (qNormalizada.length < 2) {
     productosFiltrados = resultadosBase;
   } else {
     const crudas = palabrasDe(qNormalizada).filter(function(w) { return w.length > 1; });
@@ -833,7 +834,13 @@ function aplicarFiltros() {
     puntuados.sort(function(a, b) {
       return (b.coinciden - a.coinciden) || (b.total - a.total);
     });
-    productosFiltrados = puntuados.map(function(x) { return x.producto; });
+    let finales = puntuados;
+    if (consulta.length === 1 && puntuados.length > 0) {
+      // con una sola palabra, se descartan las coincidencias muy débiles frente a la mejor
+      const corte = puntuados[0].total * 0.3;
+      finales = puntuados.filter(function(x) { return x.total >= corte; });
+    }
+    productosFiltrados = finales.map(function(x) { return x.producto; });
   }
   renderGrid();
 }
