@@ -1439,11 +1439,11 @@ document.addEventListener('DOMContentLoaded', function() {
 (function() {
   var estilo = document.createElement('style');
   estilo.textContent =
-    '.card-cart { position: absolute !important; bottom: 8px; right: 8px; z-index: 6; }' +
-    '.card-body { padding: 10px 10px 12px !important; gap: 4px !important; justify-content: center; align-items: center; text-align: center; }' +
+    '.card-cart { position: absolute !important; bottom: 8px; right: 8px; width: 36px; height: 36px; z-index: 6; }' +
+    '.card-body { padding: 10px 10px 10px !important; gap: 4px !important; justify-content: center; align-items: center; text-align: center; }' +
     '.card-nombre { min-height: 0 !important; text-align: center; }' +
     '.card-footer { margin-top: 0 !important; justify-content: center; }' +
-    '.card-left { align-items: center; text-align: center; }' +
+    '.card-left { align-items: center; text-align: center; justify-content: flex-start; min-height: 36px; }' +
     '.zoom-btn { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; padding: 0; border-radius: 50%; background: rgba(10,18,32,.55); border: 1px solid rgba(255,255,255,.30); color: #fff; display: flex; align-items: center; justify-content: center; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,.4); cursor: pointer; }' +
     '.zoom-btn:active { transform: scale(.92); }' +
     '.vz { position: fixed; inset: 0; background: rgba(6,12,24,.95); display: none; align-items: center; justify-content: center; z-index: 500; }' +
