@@ -752,6 +752,7 @@ function datosBusqueda(p) {
   let d = indiceBusqueda.get(p);
   if (!d) {
     d = {
+      visible: normalizarTexto(p.nombreApp || p.nombre),
       nombre: palabrasDe(p.nombre + ' ' + (p.nombreApp || '')),
       categoria: palabrasDe(p.categoria || ''),
       etiquetas: palabrasDe(p.etiquetas || '')
@@ -795,6 +796,20 @@ function puntosTermino(d, alternativas) {
   });
   return mejor;
 }
+function porInicial(lista, q) {
+  // 1) nombres que empiezan con lo escrito; si no hay, 2) palabras que empiezan así; si no, 3) que lo contengan
+  const n1 = [], n2 = [], n3 = [];
+  lista.forEach(function(p) {
+    const d = datosBusqueda(p);
+    if (d.visible.startsWith(q)) n1.push(p);
+    else if (d.nombre.some(function(w) { return w.startsWith(q); })) n2.push(p);
+    else if (d.visible.indexOf(q) !== -1) n3.push(p);
+  });
+  const r = n1.length ? n1 : (n2.length ? n2 : n3);
+  return r.sort(function(a, b) {
+    return datosBusqueda(a).visible.localeCompare(datosBusqueda(b).visible);
+  });
+}
 function aplicarFiltros() {
   const qNormalizada = normalizarTexto(busqueda.trim());
   // al buscar, se busca en todo el catálogo (no solo en la categoría marcada)
@@ -807,8 +822,10 @@ function aplicarFiltros() {
   const resultadosBase = productos.filter(function(p) {
     return (categoriaActiva === 'Todas' || p.categoria === categoriaActiva);
   });
-  if (qNormalizada.length < 2) {
+  if (!qNormalizada) {
     productosFiltrados = resultadosBase;
+  } else if (qNormalizada.length === 1) {
+    productosFiltrados = porInicial(resultadosBase, qNormalizada);
   } else {
     const crudas = palabrasDe(qNormalizada).filter(function(w) { return w.length > 1; });
     let terminos = crudas.filter(function(w) { return !PALABRAS_VACIAS.has(w); });
@@ -841,6 +858,7 @@ function aplicarFiltros() {
       finales = puntuados.filter(function(x) { return x.total >= corte; });
     }
     productosFiltrados = finales.map(function(x) { return x.producto; });
+    if (productosFiltrados.length === 0) productosFiltrados = porInicial(resultadosBase, qNormalizada);
   }
   renderGrid();
 }
