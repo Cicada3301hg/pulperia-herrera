@@ -1535,7 +1535,7 @@ document.addEventListener('DOMContentLoaded', function() {
     '.cat-error-btn { margin-top: 6px; border: none; border-radius: 14px; padding: 13px 28px; font-family: inherit; font-size: 15px; font-weight: 800; color: #fff; background: linear-gradient(180deg, var(--green) 0%, var(--green-deep) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.30), 0 6px 16px rgba(0,0,0,.35); cursor: pointer; }' +
     '.cat-error-btn:active { transform: scale(.97); }' +
     '.cat-error-wa { color: var(--yellow); font-size: 13.5px; font-weight: 600; text-decoration: none; padding: 8px; }' +
-    '.aviso-cat { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; padding: 11px 14px; border-radius: 14px; background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg-soft) 100%); border: 1px solid var(--yellow-border); color: var(--ink-soft); font-size: 13px; line-height: 1.4; }' +
+    '.aviso-cat { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; padding: 9px 12px 9px 16px; border-radius: 14px; background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg-soft) 100%); border: 1px solid var(--yellow-border); color: var(--ink-soft); font-size: 14px; font-weight: 600; line-height: 1.3; }' +
     '.aviso-cat span { flex: 1; }' +
     '.aviso-cat-btn { flex-shrink: 0; border: 1px solid var(--yellow-border); border-radius: 10px; padding: 8px 14px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink); background: rgba(255,255,255,.06); cursor: pointer; }';
   document.head.appendChild(estilo);
@@ -1552,10 +1552,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   // Hay catálogo guardado en el teléfono, pero no se pudo actualizar
   function mostrarAviso() {
-    if (avisoEl) return;
+    var texto = (navigator.onLine === false) ? 'Sin conexión' : 'No se pudo actualizar';
+    if (avisoEl) { avisoEl.querySelector('span').textContent = texto; return; }
     avisoEl = document.createElement('div');
     avisoEl.className = 'aviso-cat';
-    avisoEl.innerHTML = '<span>No pudimos actualizar el catálogo. Estás viendo la última versión guardada.</span><button type="button" class="aviso-cat-btn">Reintentar</button>';
+    avisoEl.innerHTML = '<span></span><button type="button" class="aviso-cat-btn">Reintentar</button>';
+    avisoEl.querySelector('span').textContent = texto;
     avisoEl.querySelector('button').addEventListener('click', function() { cargarCatalogo(); });
     grid.parentNode.insertBefore(avisoEl, grid);
   }
@@ -1565,8 +1567,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var wa = 'https://wa.me/' + WHATSAPP_NUM + '?text=' + encodeURIComponent('Hola, no me carga el catálogo de la pulpería.');
     grid.innerHTML =
       '<div class="cat-error">' + ICONO_SIN_RED +
-      '<strong>' + (sinRed ? 'Sin conexión a internet' : 'No pudimos cargar el catálogo') + '</strong>' +
-      '<p>' + (sinRed ? 'Conéctate a internet y toca Reintentar.' : 'Puede ser un problema pasajero. Revisa tu conexión e inténtalo de nuevo.') + '</p>' +
+      '<strong>' + (sinRed ? 'Sin conexión' : 'No se pudo cargar el catálogo') + '</strong>' +
+      '<p>' + (sinRed ? 'Conéctate a internet para ver el catálogo.' : 'Inténtalo de nuevo en un momento.') + '</p>' +
       '<button type="button" class="cat-error-btn">Reintentar</button>' +
       '<a class="cat-error-wa" href="' + wa + '" target="_blank" rel="noopener noreferrer">Escribirnos por WhatsApp</a>' +
       '</div>';
