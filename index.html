@@ -1703,6 +1703,63 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!document.hidden && (!productos.length || avisoEl)) cargarCatalogo();
   });
 })();
+// ===== Foto de respaldo: si el servicio de fotos falla o tarda, se usa la foto original de Loyverse =====
+(function() {
+  var ESPERA_FOTO_MS = 10000;   // cuánto se espera una foto visible antes de probar la foto original
+
+  // Enlace de la foto original de Loyverse, sacado del enlace del servicio de fotos (images.weserv.nl)
+  function fotoOriginal(src) {
+    try {
+      var u = new URL(src, location.href);
+      if (u.hostname !== 'images.weserv.nl') return null;
+      return u.searchParams.get('url') || null;
+    } catch (e) { return null; }
+  }
+  // Cambia la imagen a la foto original (una sola vez por enlace, para no entrar en un ciclo)
+  function usarRespaldo(img) {
+    var actual = img.getAttribute('src') || '';
+    var original = fotoOriginal(actual);
+    if (!original || img.dataset.respaldoDe === actual) return false;
+    img.dataset.respaldoDe = actual;
+    img.src = original;
+    return true;
+  }
+
+  // Si la foto da error, se prueba la original antes de mostrar el ícono de cámara
+  document.addEventListener('error', function(ev) {
+    var img = ev.target;
+    if (img && img.tagName === 'IMG' && usarRespaldo(img)) ev.stopPropagation();
+  }, true);
+
+  // Si la foto no termina de llegar (servicio lento o colgado), se prueba la original
+  function esperar(img) {
+    setTimeout(function() {
+      if (!img.isConnected) return;
+      if (img.complete && img.naturalWidth > 0) return;
+      usarRespaldo(img);
+    }, ESPERA_FOTO_MS);
+  }
+  var visibles = (typeof IntersectionObserver !== 'undefined') ? new IntersectionObserver(function(entradas) {
+    entradas.forEach(function(en) {
+      if (en.isIntersecting) { visibles.unobserve(en.target); esperar(en.target); }
+    });
+  }, { rootMargin: '200px' }) : null;
+  function vigilar(img) {
+    if (img.dataset.vigilada || !fotoOriginal(img.getAttribute('src') || '')) return;
+    img.dataset.vigilada = '1';
+    if (visibles) visibles.observe(img); else esperar(img);
+  }
+  new MutationObserver(function(cambios) {
+    cambios.forEach(function(c) {
+      c.addedNodes.forEach(function(n) {
+        if (n.nodeType !== 1) return;
+        if (n.tagName === 'IMG') vigilar(n);
+        else if (n.querySelectorAll) n.querySelectorAll('img').forEach(vigilar);
+      });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
+  document.querySelectorAll('img').forEach(vigilar);
+})();
 </script>
 </body>
 </html>
