@@ -1521,6 +1521,133 @@ document.addEventListener('DOMContentLoaded', function() {
     return card;
   };
 })();
+// ===== Carga del catálogo a prueba de fallas: reintento automático, aviso amable y botón para reintentar =====
+(function() {
+  var TIEMPO_MAXIMO_MS = 15000;   // cuánto espera cada intento
+  var PAUSA_REINTENTO_MS = 1500;  // pausa antes del segundo intento
+
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    '.cat-error { grid-column: 1 / -1; padding: 56px 20px; text-align: center; color: var(--ink-soft); font-size: 14px; line-height: 1.6; display: flex; flex-direction: column; align-items: center; gap: 10px; }' +
+    '.cat-error svg { color: var(--yellow); margin-bottom: 4px; }' +
+    '.cat-error strong { display: block; color: var(--ink); font-size: 17px; font-weight: 700; }' +
+    '.cat-error p { max-width: 320px; }' +
+    '.cat-error-btn { margin-top: 6px; border: none; border-radius: 14px; padding: 13px 28px; font-family: inherit; font-size: 15px; font-weight: 800; color: #fff; background: linear-gradient(180deg, var(--green) 0%, var(--green-deep) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.30), 0 6px 16px rgba(0,0,0,.35); cursor: pointer; }' +
+    '.cat-error-btn:active { transform: scale(.97); }' +
+    '.cat-error-wa { color: var(--yellow); font-size: 13.5px; font-weight: 600; text-decoration: none; padding: 8px; }' +
+    '.aviso-cat { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; padding: 11px 14px; border-radius: 14px; background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg-soft) 100%); border: 1px solid var(--yellow-border); color: var(--ink-soft); font-size: 13px; line-height: 1.4; }' +
+    '.aviso-cat span { flex: 1; }' +
+    '.aviso-cat-btn { flex-shrink: 0; border: 1px solid var(--yellow-border); border-radius: 10px; padding: 8px 14px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink); background: rgba(255,255,255,.06); cursor: pointer; }';
+  document.head.appendChild(estilo);
+
+  var ICONO_SIN_RED = '<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>';
+
+  var cargando = false;
+  var avisoEl = null;
+  var huella = '';
+
+  function quitarAviso() {
+    if (avisoEl && avisoEl.parentNode) avisoEl.parentNode.removeChild(avisoEl);
+    avisoEl = null;
+  }
+  // Hay catálogo guardado en el teléfono, pero no se pudo actualizar
+  function mostrarAviso() {
+    if (avisoEl) return;
+    avisoEl = document.createElement('div');
+    avisoEl.className = 'aviso-cat';
+    avisoEl.innerHTML = '<span>No pudimos actualizar el catálogo. Estás viendo la última versión guardada.</span><button type="button" class="aviso-cat-btn">Reintentar</button>';
+    avisoEl.querySelector('button').addEventListener('click', function() { cargarCatalogo(); });
+    grid.parentNode.insertBefore(avisoEl, grid);
+  }
+  // No hay nada que mostrar
+  function mostrarError() {
+    var sinRed = (navigator.onLine === false);
+    var wa = 'https://wa.me/' + WHATSAPP_NUM + '?text=' + encodeURIComponent('Hola, no me carga el catálogo de la pulpería.');
+    grid.innerHTML =
+      '<div class="cat-error">' + ICONO_SIN_RED +
+      '<strong>' + (sinRed ? 'Sin conexión a internet' : 'No pudimos cargar el catálogo') + '</strong>' +
+      '<p>' + (sinRed ? 'Conéctate a internet y toca Reintentar.' : 'Puede ser un problema pasajero. Revisa tu conexión e inténtalo de nuevo.') + '</p>' +
+      '<button type="button" class="cat-error-btn">Reintentar</button>' +
+      '<a class="cat-error-wa" href="' + wa + '" target="_blank" rel="noopener noreferrer">Escribirnos por WhatsApp</a>' +
+      '</div>';
+    grid.querySelector('.cat-error-btn').addEventListener('click', function() { cargarCatalogo(); });
+  }
+  function mostrarCargando() {
+    grid.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando productos...</div>';
+  }
+
+  function pedir() {
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var reloj = setTimeout(function() { if (ctrl) ctrl.abort(); }, TIEMPO_MAXIMO_MS);
+    return fetch(URL_API_GOOGLE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'obtenerCatalogo' }),
+      signal: ctrl ? ctrl.signal : undefined
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(resp) {
+      clearTimeout(reloj);
+      if (!resp || !resp.success || !resp.productos || resp.productos.length === 0) {
+        throw new Error((resp && resp.message) || 'Catálogo vacío');
+      }
+      return resp.productos;
+    })
+    .catch(function(e) { clearTimeout(reloj); throw e; });
+  }
+  function pedirConReintento() {
+    return pedir().catch(function() {
+      return new Promise(function(ok) { setTimeout(ok, PAUSA_REINTENTO_MS); }).then(pedir);
+    });
+  }
+  function mapear(lista) {
+    return lista.map(function(p) {
+      return { id: p.id || ('n-' + p.nombre), nombre: p.nombre, nombreApp: p.nombreApp || p.nombre, precio: p.precio, foto: p.foto, categoria: p.categoria, estado: p.estado, stock: p.stock, etiquetas: p.etiquetas };
+    });
+  }
+  function mostrarCatalogo() {
+    sincronizarCarritoConCatalogo();
+    construirCategorias();
+    if (categoriaActiva !== 'Todas' && !productos.some(function(p) { return p.categoria === categoriaActiva; })) categoriaActiva = 'Todas';
+    document.querySelectorAll('.cat-chip').forEach(function(el) { el.classList.toggle('active', el.dataset.cat === categoriaActiva); });
+    aplicarFiltros();
+    actualizarCarrito();
+  }
+
+  cargarCatalogo = function() {
+    if (cargando) return;
+    cargando = true;
+    var cacheLocal = leerCatalogoCache();
+    if (!productos.length) {
+      if (cacheLocal && cacheLocal.length) {      // se muestra de inmediato la copia guardada
+        productos = cacheLocal;
+        huella = JSON.stringify(productos);
+        mostrarCatalogo();
+      } else {
+        mostrarCargando();
+      }
+    }
+    pedirConReintento().then(function(lista) {
+      var nuevos = mapear(lista);
+      var h = JSON.stringify(nuevos);
+      if (h !== huella) {                          // solo se redibuja si algo cambió
+        productos = nuevos;
+        huella = h;
+        guardarCatalogoCache(productos);
+        mostrarCatalogo();
+      }
+      quitarAviso();
+    }).catch(function(err) {
+      console.log('Catálogo no disponible:', err);
+      if (productos.length) mostrarAviso(); else mostrarError();
+    }).then(function() { cargando = false; });
+  };
+
+  // si vuelve el internet, se reintenta solo
+  window.addEventListener('online', function() {
+    if (!productos.length || avisoEl) cargarCatalogo();
+  });
+})();
 </script>
 </body>
 </html>
