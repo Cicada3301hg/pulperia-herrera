@@ -1760,6 +1760,115 @@ document.addEventListener('DOMContentLoaded', function() {
   }).observe(document.body, { childList: true, subtree: true });
   document.querySelectorAll('img').forEach(vigilar);
 })();
+// ===== La tarjeta avisa por sí sola: SIN STOCK / AGOTADO, y el stock baja a medida que el cliente agrega =====
+(function() {
+  var DURACION_MS = 1700;   // cuánto dura el efecto en la tarjeta
+
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    '.card .card-foto { filter: brightness(.95) contrast(1.03) grayscale(0); transition: filter .25s ease, transform .35s cubic-bezier(0.32, 0.72, 0, 1); }' +
+    '.card .card-body { filter: grayscale(0) brightness(1); transition: filter .25s ease; }' +
+    '.card.avisando .card-foto { filter: brightness(.78) contrast(1.03) grayscale(1); }' +
+    '.card.avisando .card-body { filter: grayscale(1) brightness(.85); }' +
+    '.card-aviso { position: absolute; left: 0; right: 0; top: 50%; z-index: 7; transform: translateY(-50%) scale(.96); padding: 9px 8px; text-align: center; font-size: 12px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; line-height: 1.2; color: #fff; background: linear-gradient(180deg, rgba(239,68,68,.96) 0%, rgba(200,30,30,.96) 100%); box-shadow: 0 6px 18px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.25); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .25s cubic-bezier(0.32, 0.72, 0, 1); }' +
+    '.card-aviso.tope { background: linear-gradient(180deg, #EBC06B 0%, #C99B3F 100%); color: #1a2438; }' +
+    '.card.avisando .card-aviso { opacity: 1; transform: translateY(-50%) scale(1); }' +
+    '.card.avisando .card-aviso.sacude { animation: noHay .38s ease; }' +
+    '@keyframes noHay { 0%, 100% { transform: translateY(-50%) translateX(0); } 20% { transform: translateY(-50%) translateX(-5px); } 40% { transform: translateY(-50%) translateX(5px); } 60% { transform: translateY(-50%) translateX(-3px); } 80% { transform: translateY(-50%) translateX(3px); } }' +
+    '.tope-sacude { animation: noHayNum .4s ease; }' +
+    '@keyframes noHayNum { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }' +
+    '@media (prefers-reduced-motion: reduce) { .card.avisando .card-aviso.sacude, .tope-sacude { animation: none; } }';
+  document.head.appendChild(estilo);
+
+  function vibrar() { if (navigator.vibrate) navigator.vibrate([18, 45, 18]); }
+  function tieneStock(p) { return p.stock !== null && p.stock !== undefined; }
+  // Cuántas quedan para agregar: el stock de la pulpería menos lo que el cliente ya lleva
+  function quedan(p) { return Math.max(0, p.stock - cantidadGrupo(p.nombre)); }
+
+  // ---- El número "Stock: N" baja a medida que el cliente agrega, y vuelve a subir si quita ----
+  var registro = [];
+  function pintarStock(it) {
+    if (!it.el.isConnected) return;
+    var r = quedan(it.p);
+    it.el.textContent = 'Stock: ' + r;
+    it.el.classList.toggle('stock-cero', r <= 0);
+  }
+  function pintarTodo() {
+    registro = registro.filter(function(it) { return it.el.isConnected; });
+    registro.forEach(pintarStock);
+  }
+  var actualizarCarritoAnterior = actualizarCarrito;
+  actualizarCarrito = function() { actualizarCarritoAnterior.apply(this, arguments); pintarTodo(); };
+
+  // ---- Lo mismo en la ventana del producto ----
+  var actualizarCantidadModalAnterior = actualizarCantidadModal;
+  actualizarCantidadModal = function() {
+    actualizarCantidadModalAnterior.apply(this, arguments);
+    var p = productoModal;
+    if (!p || !tieneStock(p)) return;
+    var el = document.getElementById('pmStock'), r = quedan(p);
+    if (p.stock <= 0) { el.innerText = 'Sin stock'; el.className = 'pm-stock zero'; }
+    else if (r <= 0) { el.innerText = 'Agotado'; el.className = 'pm-stock zero'; }
+    else if (r <= 3) { el.innerText = (r === 1 ? 'Queda 1 disponible' : 'Quedan ' + r + ' disponibles'); el.className = 'pm-stock low'; }
+    else { el.innerText = 'Stock: ' + r + ' disponibles'; el.className = 'pm-stock'; }
+  };
+
+  // ---- La tarjeta avisa cuando no se puede agregar ----
+  var crearTarjetaAnterior = crearTarjeta;
+  crearTarjeta = function(p) {
+    var card = crearTarjetaAnterior(p);
+    var stockEl = card.querySelector('.card-stock');
+    if (stockEl && tieneStock(p)) { var it = { p: p, el: stockEl }; registro.push(it); pintarStock(it); }
+    var foto = card.querySelector('.card-foto-wrap');
+    if (!foto) return card;
+    var aviso = document.createElement('div');
+    aviso.className = 'card-aviso';
+    aviso.setAttribute('role', 'status');
+    foto.appendChild(aviso);
+    var reloj = null;
+
+    function avisar(texto, esTope) {
+      aviso.textContent = texto;
+      aviso.classList.toggle('tope', !!esTope);
+      card.classList.add('avisando');
+      aviso.classList.remove('sacude'); void aviso.offsetWidth; aviso.classList.add('sacude');
+      vibrar();
+      clearTimeout(reloj);
+      reloj = setTimeout(function() { card.classList.remove('avisando'); aviso.classList.remove('sacude'); }, DURACION_MS);
+    }
+
+    // Se mira ANTES de que la tarjeta haga lo suyo (agregar o abrir el detalle)
+    card.addEventListener('click', function(ev) {
+      if (ev.target.closest('.zoom-btn')) return;               // la lupa siempre funciona
+      if (!tieneStock(p)) return;                               // sin dato de stock: no hay límite
+      var sinStock = p.stock <= 0;
+      var yaLlevaTodo = !sinStock && cantidadGrupo(p.nombre) >= p.stock;
+      var viaCarrito = !!ev.target.closest('.card-cart');       // el ícono del carrito abre el detalle aunque ya lleve todo
+      if (sinStock) avisar('Sin stock', false);
+      else if (yaLlevaTodo && !viaCarrito) avisar('Agotado', true);
+    }, true);
+    return card;
+  };
+
+  // Estos dos avisos flotantes ya no hacen falta: ahora lo dice la propia tarjeta
+  var toastAnterior = showToast;
+  showToast = function(msg, tipo) {
+    if (msg === 'Sin stock disponible' || /^Solo hay \d+ disponibles?$/.test(msg)) return;
+    toastAnterior.call(this, msg, tipo);
+  };
+
+  // Dentro de las ventanas del producto y del carrito: el botón + apagado hace temblar el número
+  document.addEventListener('click', function(ev) {
+    var b = ev.target.closest && ev.target.closest('.pm-qty-btn, .qty-btn');
+    if (!b || !b.classList.contains('bloqueado') || b.textContent.trim() !== '+') return;
+    var num = b.parentElement.querySelector('.pm-qty-num, .qty-num');
+    if (num) {
+      num.classList.remove('tope-sacude'); void num.offsetWidth; num.classList.add('tope-sacude');
+      setTimeout(function() { num.classList.remove('tope-sacude'); }, 450);
+    }
+    vibrar();
+  }, true);
+})();
 </script>
 </body>
 </html>
