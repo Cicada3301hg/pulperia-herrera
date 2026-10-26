@@ -1871,9 +1871,6 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 // ===== Sin avisos flotantes: cada cosa se ve en su propio lugar =====
 (function() {
-  var KEY = 'pulperia_ultimo_pedido_v1';
-  var VENTANA_MS = 60 * 60 * 1000;   // el pedido sin enviar se puede recuperar durante 1 hora
-
   var estilo = document.createElement('style');
   estilo.textContent =
     '.btn-confirmar, .pm-eliminar { position: relative; overflow: hidden; }' +
@@ -1886,10 +1883,6 @@ document.addEventListener('DOMContentLoaded', function() {
     '.campo-error { animation: campoSacude .38s ease; }' +
     '.campo-msg { margin-top: 8px; color: #FC8181; font-size: 12.5px; font-weight: 700; letter-spacing: -0.1px; }' +
     '@keyframes campoSacude { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }' +
-    // el botón del pedido pasa a RECUPERAR
-    '.dock.recuperar .label { color: var(--yellow); }' +
-    '.dock .dock-x { display: none; position: absolute; top: -10px; right: -10px; z-index: 4; width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 1px solid rgba(232,184,90,.55); background: #16264a; color: var(--ink-soft); align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,.5); }' +
-    '.dock.recuperar .dock-x { display: flex; }' +
     // pantalla de error de conexión: la frase que dice que sigue sin cargar
     '.cat-error-aun { color: #FC8181; font-size: 13.5px; font-weight: 700; }' +
     '.cat-error svg.sacude { animation: campoSacude .38s ease; }' +
@@ -1954,47 +1947,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var abrirFormularioOriginal = abrirFormulario;
   abrirFormulario = function() { abrirFormularioOriginal.apply(this, arguments); limpiarCampo(campoNombre); limpiarCampo(campoPago); };
 
-  // ---- 5. El botón del pedido pasa a RECUPERAR si el pedido no llegó a enviarse ----
-  var etiqueta = dock.querySelector('.label');
-  var precio = document.getElementById('cartPillTotal');
-  var contador = document.getElementById('cartPillCount');
-  var botonX = document.createElement('button');
-  botonX.type = 'button'; botonX.className = 'dock-x'; botonX.setAttribute('aria-label', 'Descartar pedido');
-  botonX.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>';
-  dock.querySelector('.content').appendChild(botonX);
-  var enModoRecuperar = false;
-
-  function leer() {
-    try {
-      var o = JSON.parse(localStorage.getItem(KEY));
-      if (!o || !o.items || !o.items.length || (Date.now() - o.ts) > VENTANA_MS) { localStorage.removeItem(KEY); return null; }
-      return o;
-    } catch (e) { return null; }
-  }
-  function guardar(items) { try { localStorage.setItem(KEY, JSON.stringify({ ts: Date.now(), items: items })); } catch (e) {} }
-  function borrar() { try { localStorage.removeItem(KEY); } catch (e) {} }
-
-  function refrescar() {
-    var o = leer();
-    var recuperar = !!o && carrito.length === 0;
-    if (recuperar) {
-      var n = 0, t = 0;
-      o.items.forEach(function(it) { n += it.cantidad; t += it.precio * it.cantidad; });
-      etiqueta.textContent = 'RECUPERAR';
-      precio.textContent = fmt(t);
-      contador.textContent = n;
-      dock.classList.add('show', 'recuperar');
-      if (!enModoRecuperar) drawOutline();
-    } else {
-      etiqueta.textContent = 'HACER PEDIDO';
-      dock.classList.remove('recuperar');
-    }
-    enModoRecuperar = recuperar;
-  }
-  var actualizarCarritoOriginal = actualizarCarrito;
-  actualizarCarrito = function() { actualizarCarritoOriginal.apply(this, arguments); refrescar(); };
-
-  // Al enviar: si falta algo, se marca en el campo; si está completo, se guarda una copia antes de que se vacíe el carrito
+  // ---- 5. Al enviar: si falta algo, se marca en el campo (y no se abre WhatsApp) ----
   var enviarPedidoOriginal = enviarPedido;
   enviarPedido = function() {
     if (carrito.length === 0) return;
@@ -2006,25 +1959,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (faltaNombre) campoNombre.focus();
       return;
     }
-    var copia = carrito.map(function(it) { return Object.assign({}, it); });
     enviarPedidoOriginal.apply(this, arguments);
-    if (copia.length && carrito.length === 0) { guardar(copia); refrescar(); }
   };
-
-  // En modo RECUPERAR, tocar el botón recupera el pedido (y no abre el carrito); la × lo descarta
-  dock.addEventListener('click', function(ev) {
-    if (!enModoRecuperar) return;
-    ev.stopPropagation();
-    if (ev.target.closest('.dock-x')) { borrar(); actualizarCarrito(); return; }
-    var o = leer();
-    if (!o) { refrescar(); return; }
-    carrito = o.items;
-    borrar();
-    sincronizarCarritoConCatalogo();
-    actualizarCarrito();
-    actualizarTodasLasTarjetas();
-    haptic(15);
-  }, true);
 
   // ---- 6. Reintentar (pantalla de error de conexión): si sigue fallando, lo dice la propia pantalla ----
   var ultimoReintento = 0;
@@ -2050,8 +1986,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }).observe(grid, { childList: true });
-
-  refrescar();
 })();
 </script>
 </body>
