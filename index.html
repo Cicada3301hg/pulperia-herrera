@@ -1869,6 +1869,190 @@ document.addEventListener('DOMContentLoaded', function() {
     vibrar();
   }, true);
 })();
+// ===== Sin avisos flotantes: cada cosa se ve en su propio lugar =====
+(function() {
+  var KEY = 'pulperia_ultimo_pedido_v1';
+  var VENTANA_MS = 60 * 60 * 1000;   // el pedido sin enviar se puede recuperar durante 1 hora
+
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    '.btn-confirmar, .pm-eliminar { position: relative; overflow: hidden; }' +
+    // al vaciar: los productos se van deslizando
+    '.cart-item-card { transition: transform .26s cubic-bezier(0.32, 0.72, 0, 1), opacity .26s ease; }' +
+    '.cart-item-card.saliendo { transform: translateX(-46px); opacity: 0; }' +
+    // errores del formulario, en el propio campo
+    '.form-input.campo-error, .form-input.campo-error:focus { border-color: var(--red) !important; box-shadow: 0 0 0 3px rgba(239,68,68,.18) !important; }' +
+    '.pago-opciones.campo-error .pago-btn { border-color: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,.14); }' +
+    '.campo-error { animation: campoSacude .38s ease; }' +
+    '.campo-msg { margin-top: 8px; color: #FC8181; font-size: 12.5px; font-weight: 700; letter-spacing: -0.1px; }' +
+    '@keyframes campoSacude { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }' +
+    // el botón del pedido pasa a RECUPERAR
+    '.dock.recuperar .label { color: var(--yellow); }' +
+    '.dock .dock-x { display: none; position: absolute; top: -10px; right: -10px; z-index: 4; width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 1px solid rgba(232,184,90,.55); background: #16264a; color: var(--ink-soft); align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,.5); }' +
+    '.dock.recuperar .dock-x { display: flex; }' +
+    // pantalla de error de conexión: la frase que dice que sigue sin cargar
+    '.cat-error-aun { color: #FC8181; font-size: 13.5px; font-weight: 700; }' +
+    '.cat-error svg.sacude { animation: campoSacude .38s ease; }' +
+    '@media (prefers-reduced-motion: reduce) { .campo-error, .cat-error svg.sacude { animation: none; } .cart-item-card { transition: none; } }';
+  document.head.appendChild(estilo);
+
+  // Pulsar un botón se ve y se siente: onda de luz y vibración corta
+  function pulso(boton, ev) {
+    if (!boton) return;
+    try { crearRipple(ev && ev.clientX !== undefined ? ev : {}, boton); } catch (e) {}
+    haptic(20);
+  }
+
+  // ---- 1. Ya no hay avisos flotantes ----
+  showToast = function() {};
+
+  // ---- 2. "Sí, vaciar": se ve el botón pulsarse y los productos deslizarse ----
+  var vaciando = false;
+  var confirmarVaciarOriginal = confirmarVaciar;
+  confirmarVaciar = function() {
+    if (vaciando) return;
+    vaciando = true;
+    pulso(document.querySelector('.btn-confirmar'), window.event);
+    setTimeout(function() {
+      cerrarConfirm();
+      var items = document.querySelectorAll('#modalCarrito .cart-item-card');
+      items.forEach(function(el, i) { setTimeout(function() { el.classList.add('saliendo'); }, Math.min(i, 4) * 30); });
+      setTimeout(function() { confirmarVaciarOriginal(); vaciando = false; }, 260 + Math.min(Math.max(items.length - 1, 0), 4) * 30 + 40);
+    }, 190);
+  };
+
+  // ---- 3. "Quitar del pedido": mismo efecto en el botón ----
+  var quitando = false;
+  var modalEliminarOriginal = modalEliminar;
+  modalEliminar = function() {
+    if (quitando) return;
+    quitando = true;
+    pulso(document.getElementById('pmEliminar'), window.event);
+    setTimeout(function() { modalEliminarOriginal(); quitando = false; }, 220);
+  };
+
+  // ---- 4. Errores del formulario: en el propio campo, en rojo ----
+  function marcarCampo(el, texto) {
+    el.classList.remove('campo-error'); void el.offsetWidth; el.classList.add('campo-error');
+    var grupo = el.closest('.form-group');
+    var msg = grupo.querySelector('.campo-msg');
+    if (!msg) { msg = document.createElement('div'); msg.className = 'campo-msg'; msg.setAttribute('role', 'alert'); grupo.appendChild(msg); }
+    msg.textContent = texto;
+  }
+  function limpiarCampo(el) {
+    if (!el) return;
+    el.classList.remove('campo-error');
+    var grupo = el.closest('.form-group');
+    var msg = grupo && grupo.querySelector('.campo-msg');
+    if (msg) msg.remove();
+  }
+  var campoNombre = document.getElementById('nombreCliente');
+  var campoPago = document.querySelector('.pago-opciones');
+  campoNombre.addEventListener('input', function() { limpiarCampo(campoNombre); });
+  var setPagoOriginal = setPago;
+  setPago = function(tipo) { setPagoOriginal.apply(this, arguments); if (tipo) limpiarCampo(campoPago); };
+  var abrirFormularioOriginal = abrirFormulario;
+  abrirFormulario = function() { abrirFormularioOriginal.apply(this, arguments); limpiarCampo(campoNombre); limpiarCampo(campoPago); };
+
+  // ---- 5. El botón del pedido pasa a RECUPERAR si el pedido no llegó a enviarse ----
+  var etiqueta = dock.querySelector('.label');
+  var precio = document.getElementById('cartPillTotal');
+  var contador = document.getElementById('cartPillCount');
+  var botonX = document.createElement('button');
+  botonX.type = 'button'; botonX.className = 'dock-x'; botonX.setAttribute('aria-label', 'Descartar pedido');
+  botonX.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>';
+  dock.querySelector('.content').appendChild(botonX);
+  var enModoRecuperar = false;
+
+  function leer() {
+    try {
+      var o = JSON.parse(localStorage.getItem(KEY));
+      if (!o || !o.items || !o.items.length || (Date.now() - o.ts) > VENTANA_MS) { localStorage.removeItem(KEY); return null; }
+      return o;
+    } catch (e) { return null; }
+  }
+  function guardar(items) { try { localStorage.setItem(KEY, JSON.stringify({ ts: Date.now(), items: items })); } catch (e) {} }
+  function borrar() { try { localStorage.removeItem(KEY); } catch (e) {} }
+
+  function refrescar() {
+    var o = leer();
+    var recuperar = !!o && carrito.length === 0;
+    if (recuperar) {
+      var n = 0, t = 0;
+      o.items.forEach(function(it) { n += it.cantidad; t += it.precio * it.cantidad; });
+      etiqueta.textContent = 'RECUPERAR';
+      precio.textContent = fmt(t);
+      contador.textContent = n;
+      dock.classList.add('show', 'recuperar');
+      if (!enModoRecuperar) drawOutline();
+    } else {
+      etiqueta.textContent = 'HACER PEDIDO';
+      dock.classList.remove('recuperar');
+    }
+    enModoRecuperar = recuperar;
+  }
+  var actualizarCarritoOriginal = actualizarCarrito;
+  actualizarCarrito = function() { actualizarCarritoOriginal.apply(this, arguments); refrescar(); };
+
+  // Al enviar: si falta algo, se marca en el campo; si está completo, se guarda una copia antes de que se vacíe el carrito
+  var enviarPedidoOriginal = enviarPedido;
+  enviarPedido = function() {
+    if (carrito.length === 0) return;
+    var faltaNombre = !campoNombre.value.trim(), faltaPago = !pago;
+    if (faltaNombre || faltaPago) {
+      if (faltaNombre) marcarCampo(campoNombre, 'Escribí tu nombre');
+      if (faltaPago) marcarCampo(campoPago, 'Elegí una forma de pago');
+      haptic(30);
+      if (faltaNombre) campoNombre.focus();
+      return;
+    }
+    var copia = carrito.map(function(it) { return Object.assign({}, it); });
+    enviarPedidoOriginal.apply(this, arguments);
+    if (copia.length && carrito.length === 0) { guardar(copia); refrescar(); }
+  };
+
+  // En modo RECUPERAR, tocar el botón recupera el pedido (y no abre el carrito); la × lo descarta
+  dock.addEventListener('click', function(ev) {
+    if (!enModoRecuperar) return;
+    ev.stopPropagation();
+    if (ev.target.closest('.dock-x')) { borrar(); actualizarCarrito(); return; }
+    var o = leer();
+    if (!o) { refrescar(); return; }
+    carrito = o.items;
+    borrar();
+    sincronizarCarritoConCatalogo();
+    actualizarCarrito();
+    actualizarTodasLasTarjetas();
+    haptic(15);
+  }, true);
+
+  // ---- 6. Reintentar (pantalla de error de conexión): si sigue fallando, lo dice la propia pantalla ----
+  var ultimoReintento = 0;
+  document.addEventListener('click', function(ev) {
+    var b = ev.target.closest && ev.target.closest('.cat-error-btn');
+    if (!b) return;
+    ultimoReintento = Date.now();
+    haptic(20);                 // la pantalla cambia al instante a "Cargando…", eso ya se ve
+  }, true);
+  new MutationObserver(function(cambios) {
+    cambios.forEach(function(c) {
+      c.addedNodes.forEach(function(n) {
+        if (n.nodeType !== 1 || !n.classList.contains('cat-error') || Date.now() - ultimoReintento > 30000) return;
+        ultimoReintento = 0;
+        var frase = document.createElement('div');
+        frase.className = 'cat-error-aun';
+        frase.textContent = navigator.onLine === false ? 'Sigue sin conexión' : 'Aún no se pudo';
+        var p = n.querySelector('p');
+        if (p) p.insertAdjacentElement('afterend', frase);
+        var icono = n.querySelector('svg');
+        if (icono) icono.classList.add('sacude');
+        haptic(30);
+      });
+    });
+  }).observe(grid, { childList: true });
+
+  refrescar();
+})();
 </script>
 </body>
 </html>
