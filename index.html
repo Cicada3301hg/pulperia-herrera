@@ -1877,16 +1877,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // al vaciar: los productos se van deslizando
     '.cart-item-card { transition: transform .26s cubic-bezier(0.32, 0.72, 0, 1), opacity .26s ease; }' +
     '.cart-item-card.saliendo { transform: translateX(-46px); opacity: 0; }' +
-    // errores del formulario, en el propio campo
-    '.form-input.campo-error, .form-input.campo-error:focus { border-color: var(--red) !important; box-shadow: 0 0 0 3px rgba(239,68,68,.18) !important; }' +
-    '.pago-opciones.campo-error .pago-btn { border-color: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,.14); }' +
-    '.campo-error { animation: campoSacude .38s ease; }' +
-    '.campo-msg { margin-top: 8px; color: #FC8181; font-size: 12.5px; font-weight: 700; letter-spacing: -0.1px; }' +
+    // avisos del formulario, en el propio campo y con tono amable
+    '.form-input.campo-error, .form-input.campo-error:focus { border-color: rgba(232,184,90,.85) !important; box-shadow: 0 0 0 4px rgba(232,184,90,.14) !important; }' +
+    '.pago-opciones.campo-error { border-color: rgba(232,184,90,.85); box-shadow: 0 0 0 4px rgba(232,184,90,.14), inset 0 2px 6px rgba(0,0,0,.3); }' +
+    '.campo-error { animation: campoRebota .42s cubic-bezier(0.32, 0.72, 0, 1); }' +
+    '.campo-msg { display: flex; align-items: center; gap: 7px; margin-top: 10px; color: var(--yellow); font-size: 12.5px; font-weight: 600; letter-spacing: -0.1px; overflow: hidden; animation: msgEntra .32s cubic-bezier(0.32, 0.72, 0, 1); }' +
+    '@keyframes msgEntra { from { max-height: 0; margin-top: 0; opacity: 0; } to { max-height: 30px; margin-top: 10px; opacity: 1; } }' +
+    '.campo-msg::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); flex-shrink: 0; }' +
+    '@keyframes campoRebota { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } 60% { transform: translateY(1px); } }' +
     '@keyframes campoSacude { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }' +
     // pantalla de error de conexión: la frase que dice que sigue sin cargar
     '.cat-error-aun { color: #FC8181; font-size: 13.5px; font-weight: 700; }' +
     '.cat-error svg.sacude { animation: campoSacude .38s ease; }' +
-    '@media (prefers-reduced-motion: reduce) { .campo-error, .cat-error svg.sacude { animation: none; } .cart-item-card { transition: none; } }';
+    '@media (prefers-reduced-motion: reduce) { .campo-error, .campo-msg, .cat-error svg.sacude { animation: none; } .cart-item-card { transition: none; } }';
   document.head.appendChild(estilo);
 
   // Pulsar un botón se ve y se siente: onda de luz y vibración corta
@@ -1924,7 +1927,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() { modalEliminarOriginal(); quitando = false; }, 220);
   };
 
-  // ---- 4. Errores del formulario: en el propio campo, en rojo ----
+  // ---- 4. Avisos del formulario: en el propio campo, con tono amable ----
   function marcarCampo(el, texto) {
     el.classList.remove('campo-error'); void el.offsetWidth; el.classList.add('campo-error');
     var grupo = el.closest('.form-group');
@@ -1953,8 +1956,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (carrito.length === 0) return;
     var faltaNombre = !campoNombre.value.trim(), faltaPago = !pago;
     if (faltaNombre || faltaPago) {
-      if (faltaNombre) marcarCampo(campoNombre, 'Escribí tu nombre');
-      if (faltaPago) marcarCampo(campoPago, 'Elegí una forma de pago');
+      if (faltaNombre) marcarCampo(campoNombre, 'Nos falta tu nombre para anotarlo');
+      if (faltaPago) marcarCampo(campoPago, 'Nos falta saber cómo vas a pagar');
       haptic(30);
       if (faltaNombre) campoNombre.focus();
       return;
@@ -1986,6 +1989,411 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }).observe(grid, { childList: true });
+
+})();
+
+// ===== Panel de control: el estilo y las piezas que comparten todas las ventanas =====
+(function() {
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    // la hoja: panel oscuro y parejo, sin brillo en el centro
+    '.panel { --led: #4CC261; --led-off: rgba(76,194,97,.085); --hundido: linear-gradient(180deg, #060C17 0%, #0D1627 100%); --hundido-sombra: inset 0 3px 9px rgba(0,0,0,.82), inset 0 -1px 0 rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.09); --acero: linear-gradient(180deg, #384A71 0%, #243252 55%, #1B2842 100%); }' +
+    '.modal-sheet.panel { background: repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0 1px, transparent 1px 4px), linear-gradient(180deg, #172543 0%, #0A1322 100%); max-height: 94vh; border-radius: 28px 28px 0 0; box-shadow: 0 -24px 60px rgba(0,0,0,.65); }' +
+    '.panel .modal-handle { display: none; }' +
+    '.panel .modal-head { padding-top: 20px; }' +
+    '.panel .modal-titulo { padding-bottom: 0; margin-bottom: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: rgba(154,168,194,.8); }' +
+    '.panel .modal-titulo::after { display: none; }' +
+    // pantalla hundida con puntos luminosos
+    '.pn-pantalla { position: relative; width: 100%; box-sizing: border-box; padding: 10px 14px 12px; border-radius: 22px; background: var(--hundido); box-shadow: var(--hundido-sombra), 0 14px 30px rgba(0,0,0,.30); overflow: hidden; }' +
+    '.pn-pantalla::after { content: ""; position: absolute; inset: 0; border-radius: 22px; pointer-events: none; background: linear-gradient(135deg, rgba(255,255,255,.07) 0%, transparent 38%); }' +
+    '.pn-top { display: flex; align-items: center; justify-content: center; margin-bottom: 6px; font-size: 10px; font-weight: 800; letter-spacing: 2.6px; text-transform: uppercase; color: rgba(154,168,194,.75); }' +
+    '.pn-pie { margin-top: 7px; text-align: center; font-size: 11.5px; font-weight: 600; letter-spacing: .3px; color: rgba(154,168,194,.75); }' +
+    '.dm-pre { align-self: center; margin-right: 4px; font-size: 38px; font-weight: 800; line-height: 1; color: var(--led); text-shadow: 0 0 10px rgba(76,194,97,.75), 0 0 1px rgba(210,255,215,.9); }' +
+    '.dm { display: flex; justify-content: center; align-items: center; gap: 9px; min-height: 57px; }' +
+    '.dm-g { display: grid; grid-template-columns: repeat(5, 6px); grid-auto-rows: 6px; gap: 2.4px; }' +
+    '.dm-g.angosto { display: block; width: 10px; }' +
+    '.dm-g i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--led-off); transition: background .1s linear, box-shadow .1s linear; }' +
+    '.dm-g i.on { background: var(--led); box-shadow: 0 0 7px rgba(76,194,97,.85), 0 0 1px rgba(210,255,215,.9); }' +
+    '@media (max-width: 370px) { .dm-g { grid-template-columns: repeat(5, 5px); grid-auto-rows: 5px; gap: 2px; } .dm-g i { width: 5px; height: 5px; } .dm-g.angosto { width: 8px; } .dm { gap: 7px; min-height: 48px; } }' +
+    // regla con marcas
+    '.pn-regla { width: 100%; height: 13px; margin: 10px 0 0; background: linear-gradient(90deg, transparent 3.5px, rgba(255,255,255,.26) 3.5px 4.5px, transparent 4.5px) center bottom / 8px 6px repeat-x, linear-gradient(90deg, transparent 19.25px, rgba(232,184,90,.75) 19.25px 20.75px, transparent 20.75px) center bottom / 40px 12px repeat-x; opacity: 0; animation: pnRegla .6s ease .15s forwards; }' +
+    '@keyframes pnRegla { to { opacity: 1; } }' +
+    // botón principal con relieve y luz
+    '.panel .btn-primary { position: relative; height: 58px; padding: 0 22px; border-radius: 22px; gap: 10px; font-size: 15.5px; font-weight: 800; letter-spacing: -0.1px; background: linear-gradient(180deg, #46AD52 0%, #237A32 52%, #1A6226 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -3px 6px rgba(0,0,0,.35), 0 10px 22px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.55); transition: transform .12s ease, box-shadow .12s ease; }' +
+    '.panel .btn-primary::before { display: none; }' +
+    '.panel .btn-primary:active { transform: translateY(2px); box-shadow: inset 0 3px 8px rgba(0,0,0,.5), 0 3px 8px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.55); }' +
+    '.panel .btn-primary.con-luz::after { content: ""; position: absolute; top: 0; left: 50%; width: 40px; height: 3px; margin-left: -20px; border-radius: 0 0 4px 4px; background: #0E3A16; box-shadow: inset 0 1px 1px rgba(0,0,0,.6); transition: background .25s ease, box-shadow .25s ease; }' +
+    '.panel .btn-primary.con-luz.listo::after { background: #C6FFCF; box-shadow: 0 0 12px 3px rgba(130,255,160,.9); }' +
+    '@media (prefers-reduced-motion: reduce) { .pn-regla { animation: none; opacity: 1; } }';
+  document.head.appendChild(estilo);
+
+  var GLIFOS = {
+    '0': ['01110','10001','10001','10001','10001','10001','01110'],
+    '1': ['00100','01100','00100','00100','00100','00100','01110'],
+    '2': ['01110','10001','00001','00010','00100','01000','11111'],
+    '3': ['11110','00001','00001','01110','00001','00001','11110'],
+    '4': ['00010','00110','01010','10010','11111','00010','00010'],
+    '5': ['11111','10000','11110','00001','00001','10001','01110'],
+    '6': ['00110','01000','10000','11110','10001','10001','01110'],
+    '7': ['11111','00001','00010','00100','01000','01000','01000'],
+    '8': ['01110','10001','10001','01110','10001','10001','01110'],
+    '9': ['01110','10001','10001','01111','00001','00010','01100'],
+    '₡': ['00101','01110','10100','10000','10100','01110','00101']
+  };
+
+  // Una pantalla de puntos: se le da un monto y lo dibuja, contando desde el anterior
+  function pantalla(el, rotulo) {
+    var ranuras = [], actual = 0, cuadro = 0;
+    function montar(cifras, simbolo) {
+      el.innerHTML = ''; ranuras = [];
+      if (simbolo) { var pre = document.createElement('span'); pre.className = 'dm-pre'; pre.setAttribute('aria-hidden', 'true'); pre.textContent = simbolo; el.appendChild(pre); }
+      for (var i = 0; i < cifras.length; i++) {
+        var g = document.createElement('div');
+        var angosto = /\s/.test(cifras.charAt(i));
+        g.className = 'dm-g' + (angosto ? ' angosto' : '');
+        if (!angosto) for (var k = 0; k < 35; k++) g.appendChild(document.createElement('i'));
+        g.setAttribute('aria-hidden', 'true');
+        el.appendChild(g); ranuras.push(g);
+      }
+    }
+    function pintar(cifras) {
+      var desfase = ranuras.length - cifras.length;
+      for (var i = 0; i < ranuras.length; i++) {
+        var g = ranuras[i];
+        if (g.classList.contains('angosto')) continue;
+        var c = i - desfase >= 0 ? cifras.charAt(i - desfase) : ' ';
+        var bits = GLIFOS[c], puntos = g.children;
+        for (var f = 0; f < 7; f++) for (var q = 0; q < 5; q++) puntos[f * 5 + q].classList.toggle('on', !!bits && bits[f].charAt(q) === '1');
+      }
+    }
+    function partir(valor) { var t = fmt(valor); var simbolo = /\d/.test(t.charAt(0)) ? '' : t.charAt(0); return { texto: t, simbolo: simbolo, cifras: simbolo ? t.slice(1) : t }; }
+    // mostrar(valor, desde): si se da "desde", cuenta desde ahí; si no, desde el valor anterior
+    function mostrar(valor, desde, ms) {
+      var f = partir(valor);
+      el.setAttribute('role', 'img'); el.setAttribute('aria-label', (rotulo || 'Total') + ' ' + f.texto);
+      if (ranuras.length !== f.cifras.length || !el.firstChild) montar(f.cifras, f.simbolo);
+      var origen = (desde === undefined || desde === null) ? actual : desde;
+      cancelAnimationFrame(cuadro);
+      actual = valor;
+      if (origen === valor || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) { pintar(f.cifras); return; }
+      var ini = performance.now(), dur = ms || 650;
+      (function paso(t) {
+        var k = Math.min(1, (t - ini) / dur), e = 1 - Math.pow(1 - k, 3);
+        pintar(partir(Math.round(origen + (valor - origen) * e)).cifras);
+        if (k < 1) cuadro = requestAnimationFrame(paso);
+      })(ini);
+    }
+    return { mostrar: mostrar };
+  }
+
+  window.Panel = {
+    marcar: function(hoja) { hoja.classList.add('panel'); },
+    pantalla: pantalla
+  };
+})();
+
+// ===== Confirmar pedido: panel de control (pantalla de puntos, interruptor con perilla, botón con relieve y luz) =====
+(function() {
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    '#modalFormulario .modal-head { padding: 20px 20px 0; gap: 0; }' +
+    '#modalFormulario .modal-body { padding: 4px 22px 4px; }' +
+    // lista
+    '#modalFormulario .resumen-pedido { background: none; border-radius: 0; padding: 0; margin: 0 0 14px; box-shadow: none; }' +
+    '#modalFormulario .resumen-pedido::before { display: none; }' +
+    '.fm-lista { max-height: clamp(96px, 33vh, 290px); overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }' +
+    '.fm-lista::-webkit-scrollbar { display: none; }' +
+    '.fm-lista.desborda { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 22px), transparent); }' +
+    '.fm-fila { display: flex; align-items: center; gap: 12px; padding: 8px 2px; border-bottom: 1px solid rgba(0,0,0,.5); box-shadow: 0 1px 0 rgba(255,255,255,.045); opacity: 0; transform: translateY(6px); animation: fmFila .42s cubic-bezier(0.32, 0.72, 0, 1) forwards; animation-delay: calc(var(--i) * 45ms + 260ms); }' +
+    '.fm-fila:last-child { border-bottom: none; box-shadow: none; }' +
+    '@keyframes fmFila { to { opacity: 1; transform: none; } }' +
+    '.fm-cant { flex-shrink: 0; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--hundido); box-shadow: inset 0 2px 5px rgba(0,0,0,.75), 0 1px 0 rgba(255,255,255,.08); font-size: 12.5px; font-weight: 800; color: var(--yellow); font-variant-numeric: tabular-nums; }' +
+    '.fm-nombre { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; line-height: 1.3; color: var(--ink); letter-spacing: -0.1px; }' +
+    '.fm-precio { font-size: 14.5px; font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }' +
+    // rótulos grabados
+    '#modalFormulario .form-group { margin-bottom: 14px; text-align: center; }' +
+    '#modalFormulario .form-label { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; font-size: 10.5px; font-weight: 800; color: rgba(154,168,194,.8); text-transform: uppercase; letter-spacing: 2.6px; }' +
+    '#modalFormulario .form-label::before, #modalFormulario .form-label::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.14)); }' +
+    '#modalFormulario .form-label::after { background: linear-gradient(270deg, transparent, rgba(255,255,255,.14)); }' +
+    // nombre: campo hundido
+    '.campo-pantalla { position: relative; }' +
+    '.campo-pantalla .campo-ico { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--ink-mute); pointer-events: none; transition: color .2s ease; }' +
+    '#modalFormulario .campo-pantalla .form-input { width: 100%; height: 56px; padding: 0 16px 0 52px; border: none; border-radius: 18px; background: var(--hundido); box-shadow: var(--hundido-sombra); text-align: left; font-size: 17px; font-weight: 600; letter-spacing: -0.2px; color: var(--ink); transition: box-shadow .25s ease; }' +
+    '#modalFormulario .campo-pantalla .form-input::placeholder { color: var(--ink-mute); font-weight: 500; }' +
+    '#modalFormulario .campo-pantalla .form-input:focus { box-shadow: inset 0 0 0 1.5px rgba(232,184,90,.75), inset 0 3px 9px rgba(0,0,0,.82), 0 0 0 4px rgba(232,184,90,.10); }' +
+    '.campo-pantalla:focus-within .campo-ico { color: var(--yellow); }' +
+    '#modalFormulario .campo-pantalla .form-input.campo-error { border: none; box-shadow: inset 0 0 0 1.5px rgba(232,184,90,.95), inset 0 3px 9px rgba(0,0,0,.82), 0 0 0 4px rgba(232,184,90,.12) !important; }' +
+    '#modalFormulario .campo-msg { justify-content: center; }' +
+    // forma de pago: interruptor con perilla
+    '#modalFormulario .pago-opciones { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 0; height: 60px; padding: 5px; border: none; border-radius: 21px; background: var(--hundido); box-shadow: var(--hundido-sombra); }' +
+    '#modalFormulario .pago-opciones.campo-error { border: none; box-shadow: inset 0 0 0 1.5px rgba(232,184,90,.95), inset 0 3px 9px rgba(0,0,0,.82), 0 0 0 4px rgba(232,184,90,.12); }' +
+    '#modalFormulario .pago-opciones::before { content: ""; position: absolute; top: 5px; bottom: 5px; left: 5px; width: calc(50% - 5px); border-radius: 16px; background: linear-gradient(90deg, transparent 0%, var(--led) 50%, transparent 100%) center 3px / 56% 2px no-repeat, var(--acero); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -2px 4px rgba(0,0,0,.4), 0 7px 14px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.55), 0 0 22px rgba(76,194,97,.22); opacity: 0; transform: translateX(50%) scale(.88); transition: transform .42s cubic-bezier(0.34, 1.5, 0.5, 1), opacity .2s ease; }' +
+    '#modalFormulario .pago-opciones[data-sel="contado"]::before { opacity: 1; transform: translateX(0) scale(1); }' +
+    '#modalFormulario .pago-opciones[data-sel="credito"]::before { opacity: 1; transform: translateX(100%) scale(1); }' +
+    '#modalFormulario .pago-opciones .pago-btn { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 9px; height: auto; padding: 0 6px; border: none; border-radius: 16px; background: transparent; box-shadow: none; transform: none; font-size: 13.5px; font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase; color: rgba(154,168,194,.85); transition: color .25s ease; }' +
+    '#modalFormulario .pago-opciones .pago-btn.active { background: transparent; border: none; box-shadow: none; transform: none; color: #fff; }' +
+    // pie
+    '#modalFormulario .cart-total { padding: 6px 22px calc(12px + env(safe-area-inset-bottom, 0px)); background: none; border-top: none; }' +
+    '#modalFormulario .cart-total::before { display: none; }' +
+    '#modalFormulario .btn-row { display: flex; flex-direction: column-reverse; gap: 2px; }' +
+    '#modalFormulario .btn-cerrar-secondary { background: none; border: none; box-shadow: none; padding: 13px 10px 6px; font-size: 14px; font-weight: 600; color: var(--ink-soft); }' +
+    '.pie-nota { text-align: center; margin-top: 4px; font-size: 11.5px; font-weight: 600; color: var(--ink-mute); letter-spacing: -0.05px; }' +
+    '@media (prefers-reduced-motion: reduce) { .fm-fila { animation: none; opacity: 1; transform: none; } #modalFormulario .pago-opciones::before { transition: none; } }';
+  document.head.appendChild(estilo);
+
+  // ---- Piezas fijas ----
+  var hoja = document.querySelector('#modalFormulario .modal-sheet');
+  Panel.marcar(hoja);
+  var cabecera = hoja.querySelector('.modal-head');
+  cabecera.insertAdjacentHTML('beforeend', '<div class="pn-pantalla"><div class="pn-top"><span>Total</span></div><div class="dm" id="fmDM"></div><div class="pn-pie" id="fmSub"></div></div><div class="pn-regla"></div>');
+  var pantalla = Panel.pantalla(document.getElementById('fmDM'));
+
+  var campoNombreEl = document.getElementById('nombreCliente');
+  var grupoNombre = campoNombreEl.closest('.form-group');
+  var etNombre = grupoNombre.querySelector('.form-label');
+  if (etNombre) etNombre.textContent = 'A nombre de';
+  var envoltorio = document.createElement('div');
+  envoltorio.className = 'campo-pantalla';
+  campoNombreEl.parentNode.insertBefore(envoltorio, campoNombreEl);
+  envoltorio.innerHTML = '<svg class="campo-ico" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>';
+  envoltorio.appendChild(campoNombreEl);
+  campoNombreEl.setAttribute('placeholder', 'Tu nombre');
+
+  var opcionesPago = hoja.querySelector('.pago-opciones');
+  var etPago = opcionesPago.parentNode.querySelector('.form-label');
+  if (etPago) etPago.textContent = 'Forma de pago';
+  document.getElementById('pagoContado').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"></rect><circle cx="12" cy="12" r="2.6"></circle><path d="M6 12h.01M18 12h.01"></path></svg><span>Contado</span>';
+  document.getElementById('pagoCredito').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"></path><path d="M8 8h6M8 12h6"></path></svg><span>Crédito</span>';
+
+  var botonEnviar = document.getElementById('btnEnviar');
+  botonEnviar.classList.add('con-luz');
+  botonEnviar.innerHTML = '<span>Enviar por WhatsApp</span><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.5 7.3L3 20.5l1.8-5.3A8.4 8.4 0 1 1 21 11.5z"></path></svg>';
+  hoja.querySelector('.btn-cerrar-secondary').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>Volver';
+  var nota = document.createElement('div');
+  nota.className = 'pie-nota'; nota.textContent = 'Se abre WhatsApp con tu pedido listo para enviar.';
+  hoja.querySelector('.btn-row').insertAdjacentElement('afterend', nota);
+
+  // la luz del botón se enciende cuando el pedido está completo
+  function revisarListo() { botonEnviar.classList.toggle('listo', campoNombreEl.value.trim() !== '' && !!pago); }
+  campoNombreEl.addEventListener('input', revisarListo);
+  var setPagoAnterior = setPago;
+  setPago = function(tipo) { setPagoAnterior.apply(this, arguments); opcionesPago.setAttribute('data-sel', tipo || ''); revisarListo(); };
+
+  // ---- Al abrir: la pantalla cuenta y la lista aparece fila por fila ----
+  function armarResumen() {
+    var unidades = 0;
+    carrito.forEach(function(it) { unidades += it.cantidad; });
+    var filas = carrito.map(function(it, i) {
+      return '<div class="fm-fila" style="--i:' + Math.min(i, 8) + '"><span class="fm-cant">' + it.cantidad + '</span><span class="fm-nombre">' + escaparHTML(it.nombreApp || it.nombre) + '</span><span class="fm-precio">' + fmt(it.precio * it.cantidad) + '</span></div>';
+    }).join('');
+    var cont = document.getElementById('resumenPedido');
+    cont.innerHTML = '<div class="fm-lista">' + filas + '</div>';
+    var lista = cont.querySelector('.fm-lista');
+    var alto = 0; Array.prototype.forEach.call(lista.children, function(f) { alto += f.offsetHeight; });
+    lista.classList.toggle('desborda', alto > lista.clientHeight + 2);
+    document.getElementById('fmSub').textContent = carrito.length + (carrito.length === 1 ? ' producto' : ' productos') + ' · ' + unidades + (unidades === 1 ? ' unidad' : ' unidades');
+    var regla = cabecera.querySelector('.pn-regla');
+    regla.style.animation = 'none'; void regla.offsetWidth; regla.style.animation = '';
+    pantalla.mostrar(totalCarrito(), 0);
+  }
+  var abrirFormularioAnterior = abrirFormulario;
+  abrirFormulario = function() {
+    abrirFormularioAnterior.apply(this, arguments);
+    if (carrito.length === 0) return;
+    opcionesPago.setAttribute('data-sel', '');
+    armarResumen();
+    revisarListo();
+    setTimeout(function() { if (document.activeElement === campoNombreEl) campoNombreEl.blur(); }, 450);
+  };
+})();
+// ===== Editar un producto del pedido: todo centrado y con el mismo peso a ambos lados =====
+(function() {
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    '#modalProducto .modal-body { padding: 18px 24px 30px; }' +
+    // producto: foto al centro, nombre y una sola línea con precio y estado
+    '#modalProducto .pm-header { display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 0 0 16px; text-align: center; }' +
+    '#modalProducto .pm-foto-wrap { width: 88px; height: 88px; flex-shrink: 0; border: none; border-radius: 24px; overflow: hidden; background: var(--hundido); box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.55), 0 0 0 4px rgba(0,0,0,.28); }' +
+    '#modalProducto .pm-info { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }' +
+    '#modalProducto .pm-nombre { font-size: 19px; font-weight: 800; line-height: 1.25; letter-spacing: -0.3px; color: var(--ink); }' +
+    '.pm-linea { display: flex; align-items: center; justify-content: center; gap: 14px; }' +
+    '#modalProducto .pm-precio-unit { margin: 0; font-size: 14px; font-weight: 600; color: var(--ink-soft); }' +
+    '.pm-linea .pm-precio-unit::after { content: ""; display: inline-block; width: 1px; height: 14px; margin-left: 14px; vertical-align: -2px; background: rgba(255,255,255,.2); }' +
+    '#modalProducto .pm-stock { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .1px; color: var(--ink-soft); }' +
+    '#modalProducto .pm-stock::before { content: ""; width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--led); box-shadow: 0 0 9px var(--led); }' +
+    '#modalProducto .pm-stock.low { color: #F2B544; }' +
+    '#modalProducto .pm-stock.low::before { background: #F2B544; box-shadow: 0 0 9px #F2B544; }' +
+    '#modalProducto .pm-stock.zero { color: #FC8181; }' +
+    '#modalProducto .pm-stock.zero::before { background: #EF5A5A; box-shadow: 0 0 9px #EF5A5A; }' +
+    '#modalProducto .pm-subtotal { display: none; }' +
+    // cantidad: dos teclas iguales y la cantidad al centro
+    '#modalProducto .pm-qty { display: grid; grid-template-columns: 64px 1fr 64px; gap: 12px; align-items: center; margin: 18px 0 0; padding: 0; background: none; border: none; box-shadow: none; }' +
+    '#modalProducto .pm-qty-btn { position: relative; width: 64px; height: 64px; display: grid; place-items: center; padding: 0; border: none; border-radius: 21px; background: linear-gradient(180deg, #2B3B5E 0%, #1B2842 100%); color: var(--led); box-shadow: inset 0 1px 0 rgba(255,255,255,.20), inset 0 -3px 5px rgba(0,0,0,.45), 0 8px 16px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.6); transition: transform .1s ease, box-shadow .1s ease, color .2s ease; }' +
+    '#modalProducto .pm-qty-btn svg { display: block; filter: drop-shadow(0 0 5px rgba(76,194,97,.85)); transition: filter .15s ease; }' +
+    '#modalProducto .pm-qty-btn .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }' +
+    '#modalProducto .pm-qty-btn:active { transform: translateY(2px); box-shadow: inset 0 3px 8px rgba(0,0,0,.55), 0 3px 8px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }' +
+    '#modalProducto .pm-qty-btn:active svg { filter: drop-shadow(0 0 9px rgba(130,255,160,1)); }' +
+    '#modalProducto .pm-qty-btn.bloqueado { color: rgba(154,168,194,.38); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -2px 4px rgba(0,0,0,.4), 0 4px 8px rgba(0,0,0,.4), 0 0 0 1px rgba(0,0,0,.55); }' +
+    '#modalProducto .pm-qty-btn.bloqueado svg { filter: none; }' +
+    '#modalProducto .pm-qty-num { height: 64px; display: grid; place-items: center; border-radius: 21px; background: var(--hundido); box-shadow: var(--hundido-sombra); font-size: 38px; font-weight: 800; letter-spacing: -1px; color: #fff; font-variant-numeric: tabular-nums; }' +
+    // pie: Listo manda; quitar es solo un texto
+    '#modalProducto .pm-footer { display: flex; flex-direction: column-reverse; gap: 2px; padding: 0 24px calc(12px + env(safe-area-inset-bottom, 0px)); background: none; border-top: none; }' +
+    '#modalProducto .pm-eliminar { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 10px 6px; background: none; border: none; box-shadow: none; font-size: 14px; font-weight: 700; color: #FC8181; }' +
+    '#modalProducto .pm-eliminar.hidden { display: none; }';
+  document.head.appendChild(estilo);
+
+  var hoja = document.querySelector('#modalProducto .modal-sheet');
+  Panel.marcar(hoja);
+
+  // precio y estado, en una sola línea centrada
+  var info = hoja.querySelector('.pm-info');
+  var linea = document.createElement('div');
+  linea.className = 'pm-linea';
+  linea.appendChild(document.getElementById('pmPrecioUnit'));
+  linea.appendChild(document.getElementById('pmStock'));
+  info.appendChild(linea);
+
+  // subtotal en la pantalla de puntos, con su regla
+  hoja.querySelector('.pm-header').insertAdjacentHTML('afterend', '<div class="pn-pantalla"><div class="pn-top"><span>Subtotal</span></div><div class="dm" id="pmDM"></div></div><div class="pn-regla"></div>');
+  var pantalla = Panel.pantalla(document.getElementById('pmDM'), 'Subtotal');
+
+  // teclas − y +: mismo trazo, mismo largo
+  document.getElementById('pmMenos').innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg><span class="solo-lector">−</span>';
+  document.getElementById('pmMas').innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line><line x1="12" y1="5" x2="12" y2="19"></line></svg><span class="solo-lector">+</span>';
+
+  document.getElementById('pmEliminar').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>Quitar del pedido';
+
+  function refrescar(desdeCero) {
+    var p = productoModal;
+    if (!p) return;
+    var it = carrito.find(function(x) { return x.id === p.id; });
+    var cant = it ? it.cantidad : 0;
+    pantalla.mostrar(p.precio * cant, desdeCero ? 0 : undefined, desdeCero ? 700 : 280);
+  }
+  var actualizarCantidadModalAnterior = actualizarCantidadModal;
+  actualizarCantidadModal = function() { actualizarCantidadModalAnterior.apply(this, arguments); refrescar(false); };
+  var abrirModalProductoAnterior = abrirModalProducto;
+  abrirModalProducto = function(p) {
+    abrirModalProductoAnterior.apply(this, arguments);
+    var regla = hoja.querySelector('.pn-regla');
+    regla.style.animation = 'none'; void regla.offsetWidth; regla.style.animation = '';
+    refrescar(true);
+  };
+})();
+
+// ===== Tu pedido (el carrito): total en la pantalla de puntos, tarjetas con teclas oscuras y un solo botón principal =====
+(function() {
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    '#modalCarrito .modal-head { padding: 20px 20px 0; gap: 0; }' +
+    '#modalCarrito .modal-subtitulo { display: none; }' +
+    // lista de tarjetas: sin barra de desplazamiento, con desvanecido abajo cuando hay más
+    '#modalCarrito .modal-body { padding: 8px 20px 26px; scrollbar-width: none; }' +
+    '#modalCarrito .modal-body::-webkit-scrollbar { display: none; }' +
+    '#modalCarrito .modal-body.desborda { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent); }' +
+    // tarjetas: las mismas, con el reflejo centrado y las esquinas de la familia
+    '#modalCarrito .cart-item-card { border-radius: 16px; margin-bottom: 12px; }' +
+    '#modalCarrito .cart-item-card:last-child { margin-bottom: 0; }' +
+    '#modalCarrito .cart-item-card::before { border-radius: 16px; }' +
+    '#modalCarrito .cart-item-card::after { left: 15%; right: 15%; }' +
+    '#modalCarrito .cart-item-foto { border-radius: 16px 0 0 16px; }' +
+    '#modalCarrito .cart-item-subtotal { font-size: 16px; font-variant-numeric: tabular-nums; }' +
+    // cantidad: dos teclas de metal oscuro con el símbolo iluminado y la cifra en una pantalla hundida
+    '#modalCarrito .qty-control { gap: 8px; }' +
+    '#modalCarrito .qty-btn { position: relative; width: 34px; height: 34px; padding: 0; border: none; border-radius: 11px; background: linear-gradient(180deg, #2B3B5E 0%, #1B2842 100%); color: var(--led); font-size: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.20), inset 0 -2px 3px rgba(0,0,0,.45), 0 3px 5px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); transition: transform .1s ease, box-shadow .1s ease, color .2s ease; }' +
+    '#modalCarrito .qty-btn::before { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 2.6px; margin: -1.3px 0 0 -6px; border-radius: 2px; background: currentColor; box-shadow: 0 0 6px rgba(76,194,97,.85); }' +
+    '#modalCarrito .qty-btn[aria-label="Sumar"]::after { content: ""; position: absolute; left: 50%; top: 50%; width: 2.6px; height: 12px; margin: -6px 0 0 -1.3px; border-radius: 2px; background: currentColor; box-shadow: 0 0 6px rgba(76,194,97,.85); }' +
+    '#modalCarrito .qty-btn:active { transform: translateY(1.5px); background: linear-gradient(180deg, #2B3B5E 0%, #1B2842 100%); box-shadow: inset 0 2px 5px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }' +
+    '#modalCarrito .qty-btn.bloqueado { opacity: 1; cursor: not-allowed; color: rgba(154,168,194,.38); background: linear-gradient(180deg, #2B3B5E 0%, #1B2842 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -2px 3px rgba(0,0,0,.4), 0 2px 3px rgba(0,0,0,.4), 0 0 0 1px rgba(0,0,0,.55); }' +
+    '#modalCarrito .qty-btn.bloqueado::before, #modalCarrito .qty-btn.bloqueado::after { box-shadow: none; }' +
+    '#modalCarrito .qty-num { display: grid; place-items: center; min-width: 36px; height: 34px; border-radius: 11px; background: var(--hundido); box-shadow: var(--hundido-sombra); font-size: 15px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }' +
+    // pie: sin franja aparte; el botón principal y dos enlaces simétricos
+    '#modalCarrito .cart-total { padding: 8px 22px calc(12px + env(safe-area-inset-bottom, 0px)); background: none; border-top: none; }' +
+    '#modalCarrito .cart-total::before { display: none; }' +
+    '#modalCarrito .cart-total-row { display: none; }' +
+    '#modalCarrito .btn-row { display: block; }' +
+    '#modalCarrito .btn-primary.vacio { opacity: .45; pointer-events: none; }' +
+    '.pie-enlaces { position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; margin-top: 6px; }' +
+    '.pie-enlaces::before { content: ""; position: absolute; left: 50%; top: 55%; width: 1px; height: 16px; margin-top: -8px; background: rgba(255,255,255,.16); }' +
+    '#modalCarrito .pie-enlaces button { position: static; display: flex; align-items: center; justify-content: center; gap: 8px; width: auto; height: auto; padding: 14px 8px 8px; border: none; border-radius: 0; background: none; box-shadow: none; font-size: 14px; font-weight: 700; color: var(--ink-soft); }' +
+    '#modalCarrito .pie-enlaces .btn-vaciar-float { color: #FC8181; }' +
+    '#modalCarrito .pie-enlaces button:active { transform: none; opacity: .65; background: none; }' +
+    '#modalCarrito .pie-enlaces svg { width: 16px; height: 16px; flex-shrink: 0; }';
+  document.head.appendChild(estilo);
+
+  var hoja = document.querySelector('#modalCarrito .modal-sheet');
+  Panel.marcar(hoja);
+  var cabecera = hoja.querySelector('.modal-head');
+  cabecera.insertAdjacentHTML('beforeend', '<div class="pn-pantalla"><div class="pn-top"><span>Total</span></div><div class="dm" id="cartDM"></div><div class="pn-pie" id="cartResumen"></div></div><div class="pn-regla"></div>');
+  var pantalla = Panel.pantalla(document.getElementById('cartDM'));
+  var resumen = document.getElementById('cartResumen');
+  var cuerpo = document.getElementById('cartBody');
+
+  // el pie: "Encargar" arriba; debajo, seguir comprando y vaciar, a la misma distancia del centro
+  var botonSeguir = hoja.querySelector('.btn-cerrar-secondary');
+  botonSeguir.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>Seguir comprando';
+  var botonVaciar = hoja.querySelector('.btn-vaciar-float');
+  botonVaciar.insertAdjacentHTML('beforeend', 'Vaciar pedido');
+  var enlaces = document.createElement('div');
+  enlaces.className = 'pie-enlaces';
+  enlaces.appendChild(botonSeguir);
+  enlaces.appendChild(botonVaciar);
+  hoja.querySelector('.btn-row').insertAdjacentElement('afterend', enlaces);
+  var botonEncargar = document.getElementById('btnEncargar');
+
+  function abierta() { return hoja.parentElement.classList.contains('show'); }
+  function refrescarEncabezado(desdeCero) {
+    var total = totalCarrito(), unidades = totalItems(), n = carrito.length;
+    resumen.textContent = n === 0 ? '' : n + (n === 1 ? ' producto' : ' productos') + ' · ' + unidades + (unidades === 1 ? ' unidad' : ' unidades');
+    if (!abierta()) { pantalla.mostrar(total, total); return; }
+    pantalla.mostrar(total, desdeCero ? 0 : undefined, desdeCero ? 700 : 300);
+  }
+  function revisarDesborde() {
+    var fin = cuerpo.scrollTop + cuerpo.clientHeight >= cuerpo.scrollHeight - 4;
+    cuerpo.classList.toggle('desborda', cuerpo.scrollHeight > cuerpo.clientHeight + 2 && !fin);
+  }
+  cuerpo.addEventListener('scroll', revisarDesborde, { passive: true });
+
+  var actualizarCarritoAnterior = actualizarCarrito;
+  actualizarCarrito = function() { actualizarCarritoAnterior.apply(this, arguments); refrescarEncabezado(false); };
+  var renderCarritoAnterior = renderCarrito;
+  renderCarrito = function() {
+    renderCarritoAnterior.apply(this, arguments);
+    botonEncargar.classList.toggle('vacio', carrito.length === 0);
+    revisarDesborde();
+  };
+  var abrirCarritoAnterior = abrirCarrito;
+  abrirCarrito = function() {
+    abrirCarritoAnterior.apply(this, arguments);
+    if (!abierta()) return;
+    refrescarEncabezado(true);
+    revisarDesborde();
+  };
+})();
+
+// ===== ¿Vaciar tu pedido?: el mismo diálogo, con el fondo del panel y botones con relieve =====
+(function() {
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    '.confirm-box.panel { padding: 30px 24px 30px; border-radius: 26px; background: repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0 1px, transparent 1px 4px), linear-gradient(180deg, #172543 0%, #0A1322 100%); box-shadow: 0 24px 60px rgba(0,0,0,.70), 0 4px 12px rgba(0,0,0,.40); }' +
+    '.confirm-box.panel .confirm-icon { background: var(--hundido); border: none; color: #EF5A5A; box-shadow: var(--hundido-sombra), 0 0 22px rgba(239,68,68,.18); }' +
+    '.confirm-box.panel .confirm-icon svg { filter: drop-shadow(0 0 6px rgba(239,68,68,.75)); }' +
+    '.confirm-box.panel .confirm-buttons { gap: 12px; }' +
+    '.confirm-box.panel .btn-cancelar, .confirm-box.panel .btn-confirmar { display: flex; align-items: center; justify-content: center; height: 52px; padding: 0 12px; border: none; border-radius: 18px; font-size: 14.5px; font-weight: 800; letter-spacing: -0.1px; transition: transform .12s ease, box-shadow .12s ease; }' +
+    '.confirm-box.panel .btn-cancelar { background: linear-gradient(180deg, #2B3B5E 0%, #1B2842 100%); color: #C9D3E6; box-shadow: inset 0 1px 0 rgba(255,255,255,.20), inset 0 -3px 5px rgba(0,0,0,.45), 0 6px 12px rgba(0,0,0,.50), 0 0 0 1px rgba(0,0,0,.60); }' +
+    '.confirm-box.panel .btn-confirmar { background: linear-gradient(180deg, #E5504F 0%, #C03030 52%, #A12525 100%); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -3px 6px rgba(0,0,0,.35), 0 6px 14px rgba(0,0,0,.50), 0 0 0 1px rgba(0,0,0,.55); }' +
+    '.confirm-box.panel .btn-cancelar:active, .confirm-box.panel .btn-confirmar:active { transform: translateY(2px); }' +
+    '.confirm-box.panel .btn-cancelar:active { box-shadow: inset 0 3px 8px rgba(0,0,0,.55), 0 2px 4px rgba(0,0,0,.50), 0 0 0 1px rgba(0,0,0,.60); }' +
+    '.confirm-box.panel .btn-confirmar:active { box-shadow: inset 0 3px 8px rgba(0,0,0,.45), 0 2px 4px rgba(0,0,0,.50), 0 0 0 1px rgba(0,0,0,.55); }';
+  document.head.appendChild(estilo);
+  Panel.marcar(document.querySelector('#confirmOverlay .confirm-box'));
+
+  // con una sola unidad, el texto decía "los 1 producto"
+  var pedirVaciarAnterior = pedirVaciar;
+  pedirVaciar = function() {
+    pedirVaciarAnterior.apply(this, arguments);
+    if (totalItems() === 1) document.getElementById('confirmTexto').textContent = 'Se borrará el producto que agregaste.';
+  };
 })();
 </script>
 </body>
