@@ -2092,24 +2092,25 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 })();
 
-// ===== Confirmar pedido: panel de control (pantalla de puntos, interruptor con perilla, botón con relieve y luz) =====
+// ===== Confirmar pedido: solo lo que falta (total en una línea, nombre, forma de pago y enviar) =====
 (function() {
   var estilo = document.createElement('style');
   estilo.textContent =
-    '#modalFormulario .modal-head { padding: 20px 20px 0; gap: 0; }' +
-    '#modalFormulario .modal-body { padding: 4px 22px 4px; }' +
-    // lista
-    '#modalFormulario .resumen-pedido { background: none; border-radius: 0; padding: 0; margin: 0 0 14px; box-shadow: none; }' +
-    '#modalFormulario .resumen-pedido::before { display: none; }' +
-    '.fm-lista { max-height: clamp(96px, 33vh, 290px); overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }' +
-    '.fm-lista::-webkit-scrollbar { display: none; }' +
-    '.fm-lista.desborda { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 22px), transparent); }' +
-    '.fm-fila { display: flex; align-items: center; gap: 12px; padding: 8px 2px; border-bottom: 1px solid rgba(0,0,0,.5); box-shadow: 0 1px 0 rgba(255,255,255,.045); opacity: 0; transform: translateY(6px); animation: fmFila .42s cubic-bezier(0.32, 0.72, 0, 1) forwards; animation-delay: calc(var(--i) * 45ms + 260ms); }' +
-    '.fm-fila:last-child { border-bottom: none; box-shadow: none; }' +
-    '@keyframes fmFila { to { opacity: 1; transform: none; } }' +
-    '.fm-cant { flex-shrink: 0; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--hundido); box-shadow: inset 0 2px 5px rgba(0,0,0,.75), 0 1px 0 rgba(255,255,255,.08); font-size: 12.5px; font-weight: 800; color: var(--yellow); font-variant-numeric: tabular-nums; }' +
-    '.fm-nombre { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; line-height: 1.3; color: var(--ink); letter-spacing: -0.1px; }' +
-    '.fm-precio { font-size: 14.5px; font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }' +
+    '#modalFormulario .modal-sheet { max-height: 96vh; }' +
+    '#modalFormulario .modal-head { padding: 18px 20px 0; gap: 0; }' +
+    '#modalFormulario .modal-titulo { margin-bottom: 10px; }' +
+    '#modalFormulario .modal-body { padding: 16px 22px 4px; }' +
+    // la lista de productos ya se vio en el carrito: aquí no se repite
+    '#modalFormulario .resumen-pedido { display: none; }' +
+    // el total, en una pantalla pequeña y centrada
+    '.pn-pantalla.chica { padding: 8px 14px 10px; border-radius: 20px; }' +
+    '.pn-pantalla.chica .pn-top { margin-bottom: 3px; }' +
+    '.pn-pantalla.chica .dm { gap: 6px; min-height: 38px; }' +
+    '.pn-pantalla.chica .dm-g { grid-template-columns: repeat(5, 4px); grid-auto-rows: 4px; gap: 1.6px; }' +
+    '.pn-pantalla.chica .dm-g i { width: 4px; height: 4px; }' +
+    '.pn-pantalla.chica .dm-g i.on { box-shadow: 0 0 5px rgba(76,194,97,.85); }' +
+    '.pn-pantalla.chica .dm-g.angosto { width: 7px; }' +
+    '.pn-pantalla.chica .dm-pre { margin-right: 2px; font-size: 26px; }' +
     // rótulos grabados
     '#modalFormulario .form-group { margin-bottom: 14px; text-align: center; }' +
     '#modalFormulario .form-label { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; font-size: 10.5px; font-weight: 800; color: rgba(154,168,194,.8); text-transform: uppercase; letter-spacing: 2.6px; }' +
@@ -2136,16 +2137,15 @@ document.addEventListener('DOMContentLoaded', function() {
     '#modalFormulario .cart-total { padding: 6px 22px calc(12px + env(safe-area-inset-bottom, 0px)); background: none; border-top: none; }' +
     '#modalFormulario .cart-total::before { display: none; }' +
     '#modalFormulario .btn-row { display: flex; flex-direction: column-reverse; gap: 2px; }' +
-    '#modalFormulario .btn-cerrar-secondary { background: none; border: none; box-shadow: none; padding: 13px 10px 6px; font-size: 14px; font-weight: 600; color: var(--ink-soft); }' +
-    '.pie-nota { text-align: center; margin-top: 4px; font-size: 11.5px; font-weight: 600; color: var(--ink-mute); letter-spacing: -0.05px; }' +
-    '@media (prefers-reduced-motion: reduce) { .fm-fila { animation: none; opacity: 1; transform: none; } #modalFormulario .pago-opciones::before { transition: none; } }';
+    '#modalFormulario .btn-cerrar-secondary { display: flex; align-items: center; justify-content: center; gap: 8px; background: none; border: none; box-shadow: none; padding: 13px 10px 6px; font-size: 14px; font-weight: 600; color: var(--ink-soft); }' +
+    '.pie-nota { text-align: center; margin-top: 4px; font-size: 11.5px; font-weight: 600; color: var(--ink-mute); letter-spacing: -0.05px; }';
   document.head.appendChild(estilo);
 
   // ---- Piezas fijas ----
   var hoja = document.querySelector('#modalFormulario .modal-sheet');
   Panel.marcar(hoja);
   var cabecera = hoja.querySelector('.modal-head');
-  cabecera.insertAdjacentHTML('beforeend', '<div class="pn-pantalla"><div class="pn-top"><span>Total</span></div><div class="dm" id="fmDM"></div><div class="pn-pie" id="fmSub"></div></div><div class="pn-regla"></div>');
+  cabecera.insertAdjacentHTML('beforeend', '<div class="pn-pantalla chica"><div class="pn-top"><span>Total</span></div><div class="dm" id="fmDM"></div></div>');
   var pantalla = Panel.pantalla(document.getElementById('fmDM'));
 
   var campoNombreEl = document.getElementById('nombreCliente');
@@ -2168,10 +2168,20 @@ document.addEventListener('DOMContentLoaded', function() {
   var botonEnviar = document.getElementById('btnEnviar');
   botonEnviar.classList.add('con-luz');
   botonEnviar.innerHTML = '<span>Enviar por WhatsApp</span><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.5 7.3L3 20.5l1.8-5.3A8.4 8.4 0 1 1 21 11.5z"></path></svg>';
-  hoja.querySelector('.btn-cerrar-secondary').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>Volver';
   var nota = document.createElement('div');
   nota.className = 'pie-nota'; nota.textContent = 'Se abre WhatsApp con tu pedido listo para enviar.';
   hoja.querySelector('.btn-row').insertAdjacentElement('afterend', nota);
+
+  // "Volver al pedido": regresa al carrito y, si ya había escrito su nombre o elegido el pago, no lo pierde
+  var recordar = null;
+  var botonVolver = hoja.querySelector('.btn-cerrar-secondary');
+  botonVolver.removeAttribute('onclick');
+  botonVolver.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>Volver al pedido';
+  botonVolver.addEventListener('click', function() {
+    recordar = { nombre: campoNombreEl.value, pago: pago };
+    cerrarFormulario();
+    abrirCarrito();
+  });
 
   // la luz del botón se enciende cuando el pedido está completo
   function revisarListo() { botonEnviar.classList.toggle('listo', campoNombreEl.value.trim() !== '' && !!pago); }
@@ -2179,29 +2189,18 @@ document.addEventListener('DOMContentLoaded', function() {
   var setPagoAnterior = setPago;
   setPago = function(tipo) { setPagoAnterior.apply(this, arguments); opcionesPago.setAttribute('data-sel', tipo || ''); revisarListo(); };
 
-  // ---- Al abrir: la pantalla cuenta y la lista aparece fila por fila ----
-  function armarResumen() {
-    var unidades = 0;
-    carrito.forEach(function(it) { unidades += it.cantidad; });
-    var filas = carrito.map(function(it, i) {
-      return '<div class="fm-fila" style="--i:' + Math.min(i, 8) + '"><span class="fm-cant">' + it.cantidad + '</span><span class="fm-nombre">' + escaparHTML(it.nombreApp || it.nombre) + '</span><span class="fm-precio">' + fmt(it.precio * it.cantidad) + '</span></div>';
-    }).join('');
-    var cont = document.getElementById('resumenPedido');
-    cont.innerHTML = '<div class="fm-lista">' + filas + '</div>';
-    var lista = cont.querySelector('.fm-lista');
-    var alto = 0; Array.prototype.forEach.call(lista.children, function(f) { alto += f.offsetHeight; });
-    lista.classList.toggle('desborda', alto > lista.clientHeight + 2);
-    document.getElementById('fmSub').textContent = carrito.length + (carrito.length === 1 ? ' producto' : ' productos') + ' · ' + unidades + (unidades === 1 ? ' unidad' : ' unidades');
-    var regla = cabecera.querySelector('.pn-regla');
-    regla.style.animation = 'none'; void regla.offsetWidth; regla.style.animation = '';
-    pantalla.mostrar(totalCarrito(), 0);
-  }
+  // ---- Al abrir: el total aparece quieto (ya se vio en el carrito) ----
   var abrirFormularioAnterior = abrirFormulario;
   abrirFormulario = function() {
     abrirFormularioAnterior.apply(this, arguments);
     if (carrito.length === 0) return;
     opcionesPago.setAttribute('data-sel', '');
-    armarResumen();
+    pantalla.mostrar(totalCarrito(), totalCarrito());
+    if (recordar) {
+      campoNombreEl.value = recordar.nombre;
+      if (recordar.pago) setPago(recordar.pago);
+      recordar = null;
+    }
     revisarListo();
     setTimeout(function() { if (document.activeElement === campoNombreEl) campoNombreEl.blur(); }, 450);
   };
