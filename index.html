@@ -2490,6 +2490,189 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }).observe(grid, { childList: true });
 })();
+// ===== Mis pedidos: los últimos 10 pedidos quedan en el teléfono (código, cantidad y fecha; nunca el precio) =====
+(function() {
+  var HISTORIAL_KEY = 'historial_ph_v1';
+  var MAX_PEDIDOS = 10;
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    // botón junto al título: una tecla oscura con un reloj iluminado
+    '.hist-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: none; border-radius: 13px; background: linear-gradient(180deg, #2B3B5E 0%, #1B2842 100%); color: #4CC261; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.20), inset 0 -2px 3px rgba(0,0,0,.45), 0 3px 6px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); transition: transform .1s ease, box-shadow .1s ease; }' +
+    '.hist-btn[hidden] { display: none; }' +
+    '.hist-btn svg { filter: drop-shadow(0 0 5px rgba(76,194,97,.75)); }' +
+    '.hist-btn:active { transform: translateY(calc(-50% + 1.5px)); box-shadow: inset 0 2px 5px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }' +
+    // teléfonos muy angostos: el botón un poco más chico y más al borde, para no tocar "Herrera"
+    '@media (max-width: 340px) { .hist-btn { width: 34px; height: 34px; right: -6px; border-radius: 11px; } }';
+  document.head.appendChild(estilo);
+
+  function leerHistorial() {
+    try {
+      var lista = JSON.parse(localStorage.getItem(HISTORIAL_KEY));
+      return Array.isArray(lista) ? lista : [];
+    } catch (e) { return []; }
+  }
+  function guardarHistorial(lista) {
+    try { localStorage.setItem(HISTORIAL_KEY, JSON.stringify(lista.slice(0, MAX_PEDIDOS))); } catch (e) {}
+  }
+
+  // el botón: solo se ve si hay pedidos guardados
+  var botonHistorial = document.createElement('button');
+  botonHistorial.type = 'button';
+  botonHistorial.className = 'hist-btn';
+  botonHistorial.setAttribute('aria-label', 'Mis pedidos');
+  botonHistorial.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><polyline points="3 4 3 9 8 9"></polyline><polyline points="12 7 12 12 15 14"></polyline></svg>';
+  document.querySelector('.header-top').appendChild(botonHistorial);
+  function refrescarBoton() { botonHistorial.hidden = leerHistorial().length === 0; }
+  refrescarBoton();
+
+  // ---- Guardar el pedido al tocar "Enviar por WhatsApp" (solo si el pedido salió: con nombre y forma de pago) ----
+  var enviarPedidoAnterior = enviarPedido;
+  enviarPedido = function() {
+    var copia = carrito.map(function(it) { return { id: it.id, cantidad: it.cantidad }; });
+    enviarPedidoAnterior.apply(this, arguments);
+    if (copia.length === 0 || carrito.length !== 0) return;   // si el carrito no se vació, el pedido no salió
+    var lista = leerHistorial();
+    lista.unshift({ fecha: Date.now(), items: copia });
+    guardarHistorial(lista);
+    refrescarBoton();
+  };
+
+  // ---- La ventana "Mis pedidos": la fecha, y de cada producto el nombre y la cantidad (sin precios ni total) ----
+  var estiloVentana = document.createElement('style');
+  estiloVentana.textContent =
+    '#modalHistorial .modal-head { padding: 20px 20px 0; gap: 0; }' +
+    '#modalHistorial .modal-body { padding: 8px 20px 20px; }' +
+    '.hist-pedido { margin-bottom: 14px; padding: 14px 16px 16px; border-radius: 18px; background: var(--hundido); box-shadow: var(--hundido-sombra); }' +
+    '.hist-pedido:last-child { margin-bottom: 0; }' +
+    '.hist-fecha { margin-bottom: 8px; text-align: center; font-size: 10.5px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: rgba(154,168,194,.8); }' +
+    '.hist-item { display: flex; gap: 10px; padding: 5px 0; font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--ink); }' +
+    '.hist-cant { min-width: 36px; flex-shrink: 0; font-weight: 800; color: #4CC261; font-variant-numeric: tabular-nums; }' +
+    '.hist-item.no-esta { color: var(--ink-mute); }' +
+    '#modalHistorial .cart-total { padding: 6px 22px calc(12px + env(safe-area-inset-bottom, 0px)); background: none; border-top: none; }' +
+    '#modalHistorial .cart-total::before { display: none; }' +
+    '#modalHistorial .btn-cerrar-secondary { width: 100%; background: none; border: none; box-shadow: none; padding: 13px 10px 6px; font-size: 14px; font-weight: 600; color: var(--ink-soft); }';
+  document.head.appendChild(estiloVentana);
+
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="modal-overlay" id="modalHistorial">' +
+      '<div class="modal-sheet">' +
+        '<div class="modal-head"><div class="modal-titulo">Mis pedidos</div></div>' +
+        '<div class="modal-body" id="histBody"></div>' +
+        '<div class="cart-total"><button class="btn-cerrar-secondary" type="button" id="histCerrar">Cerrar</button></div>' +
+      '</div>' +
+    '</div>');
+  var ventana = document.getElementById('modalHistorial');
+  var cuerpoHist = document.getElementById('histBody');
+  Panel.marcar(ventana.querySelector('.modal-sheet'));
+
+  function fechaTexto(ms) {
+    var d = new Date(ms);
+    function dos(n) { return String(n).padStart(2, '0'); }
+    return dos(d.getDate()) + '/' + dos(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(-2) + ' · ' + dos(d.getHours()) + ':' + dos(d.getMinutes());
+  }
+  function buscarProducto(id) { return productos.find(function(p) { return p.id === id; }); }
+
+  function pintarHistorial() {
+    cuerpoHist.innerHTML = '';
+    if (!productos.length) {
+      cuerpoHist.setAttribute('data-esperando', '1');
+      cuerpoHist.innerHTML = '<div class="loading"><div class="spinner"></div>El catálogo está cargando, un momento por favor.</div>';
+      return;
+    }
+    cuerpoHist.removeAttribute('data-esperando');
+    leerHistorial().forEach(function(pedido) {
+      var tarjeta = document.createElement('div');
+      tarjeta.className = 'hist-pedido';
+      var html = '<div class="hist-fecha">' + escaparHTML(fechaTexto(pedido.fecha)) + '</div>';
+      (pedido.items || []).forEach(function(it) {
+        var p = buscarProducto(it.id);
+        html += '<div class="hist-item' + (p ? '' : ' no-esta') + '"><span class="hist-cant">' + escaparHTML(it.cantidad) + ' ×</span><span>' + escaparHTML(p ? (p.nombreApp || p.nombre) : 'Producto que ya no está disponible') + '</span></div>';
+      });
+      html += '<div class="hist-avisos"></div><button class="btn-primary" type="button">Restablecer</button>';
+      tarjeta.innerHTML = html;
+      var botonRestablecer = tarjeta.querySelector('.btn-primary');
+      botonRestablecer.addEventListener('click', function() { restablecer(pedido, tarjeta, botonRestablecer); });
+      cuerpoHist.appendChild(tarjeta);
+    });
+  }
+  function abrirHistorial() {
+    haptic(10);
+    pintarHistorial();
+    ventana.classList.add('show');
+    bloquearScroll();
+  }
+  function cerrarHistorial() {
+    ventana.classList.remove('show');
+    if (!hayModalAbierto()) desbloquearScroll();
+  }
+  botonHistorial.addEventListener('click', abrirHistorial);
+  document.getElementById('histCerrar').addEventListener('click', cerrarHistorial);
+  ventana.addEventListener('click', function(ev) { if (ev.target === ventana) cerrarHistorial(); });
+
+  // cuando el catálogo termina de cargar, la ventana abierta deja de decir que está cargando
+  var actualizarCarritoAntes = actualizarCarrito;
+  actualizarCarrito = function() {
+    actualizarCarritoAntes.apply(this, arguments);
+    if (ventana.classList.contains('show') && cuerpoHist.hasAttribute('data-esperando')) pintarHistorial();
+  };
+
+  // ---- "Restablecer": arma el carrito con los precios y el stock de hoy; lo que no se pudo, se avisa en el mismo pedido ----
+  var estiloRestablecer = document.createElement('style');
+  estiloRestablecer.textContent =
+    '#modalHistorial .hist-pedido .btn-primary { width: 100%; height: 50px; margin-top: 12px; border-radius: 18px; font-size: 15px; }' +
+    '.hist-aviso { display: flex; align-items: baseline; gap: 7px; margin-top: 8px; color: var(--yellow); font-size: 12.5px; font-weight: 600; line-height: 1.4; }' +
+    '.hist-aviso::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); flex-shrink: 0; transform: translateY(-1px); }';
+  document.head.appendChild(estiloRestablecer);
+
+  function restablecer(pedido, tarjeta, boton) {
+    var avisos = tarjeta.querySelector('.hist-avisos');
+    function avisar(lineas) {
+      avisos.innerHTML = lineas.map(function(t) { return '<div class="hist-aviso" role="alert">' + escaparHTML(t) + '</div>'; }).join('');
+    }
+    // ya se restableció y hubo avisos: el botón ahora lleva al carrito
+    if (boton.dataset.listo) { cerrarHistorial(); abrirCarrito(); return; }
+    if (!productos.length) { avisar(['El catálogo está cargando, un momento por favor.']); haptic(30); return; }
+    // si el carrito ya tiene productos, un segundo toque confirma que se reemplaza
+    if (carrito.length > 0 && !boton.dataset.confirmar) {
+      boton.dataset.confirmar = '1';
+      boton.textContent = '¿Reemplazar tu pedido actual? Toca otra vez';
+      haptic(15);
+      return;
+    }
+    var nuevo = [], usado = {}, lineas = [], noEstan = 0;
+    (pedido.items || []).forEach(function(it) {
+      var pedida = Number(it.cantidad) || 0;
+      if (pedida <= 0) return;
+      var p = buscarProducto(it.id);                  // por código: cada sabor tiene el suyo
+      if (!p) { noEstan++; return; }
+      var nombre = p.nombreApp || p.nombre;           // el nombre con el sabor
+      // los sabores de un mismo producto comparten el stock, igual que en el resto de la app
+      var hay = (p.stock === null || p.stock === undefined) ? pedida : p.stock - (usado[p.nombre] || 0);
+      if (hay <= 0) { lineas.push(nombre + ': no hay en este momento.'); return; }
+      var cant = Math.min(pedida, hay);
+      if (cant < pedida) lineas.push(nombre + ': pediste ' + pedida + ', hoy hay ' + cant + '.');
+      usado[p.nombre] = (usado[p.nombre] || 0) + cant;
+      nuevo.push({ id: p.id, nombre: p.nombre, nombreApp: p.nombreApp, precio: p.precio, foto: p.foto, cantidad: cant, stock: p.stock });
+    });
+    if (noEstan) lineas.unshift(noEstan === 1 ? 'Un producto ya no está en el catálogo.' : noEstan + ' productos ya no están en el catálogo.');
+    haptic(20);
+    if (nuevo.length === 0) {
+      lineas.push(carrito.length ? 'No se pudo agregar nada: tu pedido actual quedó como estaba.' : 'No se pudo agregar nada.');
+      avisar(lineas);
+      boton.textContent = 'Restablecer';
+      delete boton.dataset.confirmar;
+      return;
+    }
+    carrito = nuevo;
+    guardarCarrito();
+    actualizarCarrito();
+    actualizarTodasLasTarjetas();
+    if (lineas.length === 0) { cerrarHistorial(); abrirCarrito(); return; }
+    avisar(lineas);
+    boton.dataset.listo = '1';
+    boton.textContent = 'Ver mi pedido';
+  }
+})();
 </script>
 </body>
 </html>
