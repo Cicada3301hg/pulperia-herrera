@@ -2542,8 +2542,11 @@ document.addEventListener('DOMContentLoaded', function() {
   estiloVentana.textContent =
     '#modalHistorial .modal-head { padding: 20px 20px 0; gap: 0; }' +
     '#modalHistorial .modal-body { padding: 8px 20px 20px; }' +
+    // solo esta ventana: hoja gris grafito (la línea dorada de arriba viene de .modal-sheet::before y se mantiene)
+    '#modalHistorial .modal-sheet.panel { background: repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0 1px, transparent 1px 5px), linear-gradient(180deg, #262A31 0%, #1A1D23 100%); }' +
     // cada pedido: una tarjeta gris grafito que se despliega al tocar su cabecera
-    '.hist-pedido { margin-bottom: 12px; border-radius: 18px; background: linear-gradient(180deg, #2B2F37, #23272E); border: 1px solid #3A3F49; box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 6px 14px rgba(0,0,0,.35); overflow: hidden; }' +
+    '.hist-pedido { margin-bottom: 14px; border-radius: 18px; background: linear-gradient(180deg, #3C414B 0%, #2D3139 100%); border: 1px solid #12151A; box-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 -3px 0 rgba(0,0,0,.28), 0 2px 0 #0D1013, 0 10px 18px rgba(0,0,0,.5); overflow: hidden; transition: box-shadow .3s, transform .3s; }' +
+    '.hist-pedido.abierto { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 -3px 0 rgba(0,0,0,.28), 0 2px 0 #0D1013, 0 16px 26px rgba(0,0,0,.55); }' +
     '.hist-pedido:last-child { margin-bottom: 0; }' +
     '.hist-cabeza { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 16px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }' +
     '.hist-cabeza:focus-visible { outline: 2px solid #C9A24B; outline-offset: -2px; border-radius: 18px; }' +
@@ -2665,7 +2668,7 @@ document.addEventListener('DOMContentLoaded', function() {
   estiloRestablecer.textContent =
     // el interruptor: un riel oscuro con una perilla gris de aro dorado
     '.hist-desliza { margin-top: 14px; }' +
-    '.hist-riel { position: relative; height: 52px; border-radius: 26px; background: #14171C; border: 1px solid #2F343D; box-shadow: inset 0 2px 6px rgba(0,0,0,.6); overflow: hidden; user-select: none; -webkit-user-select: none; }' +
+    '.hist-riel { position: relative; height: 52px; border-radius: 26px; background: #14171C; border: 1px solid #0D1013; box-shadow: inset 0 2px 7px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.08); overflow: hidden; user-select: none; -webkit-user-select: none; }' +
     // relleno detrás de la perilla: dorado tenue al deslizar, verde si todo salió bien, ámbar si hubo avisos
     '.hist-relleno { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--x, 0px) + 46px); border-radius: 26px; background: linear-gradient(90deg, rgba(201,162,75,.04), rgba(201,162,75,.22)); pointer-events: none; }' +
     '.hist-desliza.ok .hist-relleno { background: linear-gradient(90deg, rgba(76,194,97,.06), rgba(76,194,97,.28)); }' +
@@ -2678,6 +2681,9 @@ document.addEventListener('DOMContentLoaded', function() {
     '.hist-perilla:active { cursor: grabbing; }' +
     '.hist-perilla:focus-visible { outline: 2px solid #C9A24B; outline-offset: 3px; }' +
     '.hist-perilla i { display: block; width: 2px; height: 14px; border-radius: 1px; background: rgba(0,0,0,.45); box-shadow: 1px 0 0 rgba(255,255,255,.16); }' +
+    // pasado el 50% del recorrido (clase "libre"): relleno verde tenue y aro verde en la perilla
+    '.hist-riel.libre .hist-relleno { background: linear-gradient(90deg, rgba(76,194,97,.06), rgba(76,194,97,.26)); }' +
+    '.hist-riel.libre .hist-perilla { box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 3px 7px rgba(0,0,0,.55), 0 0 0 1px rgba(76,194,97,.9), 0 0 12px rgba(76,194,97,.4); }' +
     // al soltar antes de tiempo, la perilla vuelve con suavidad
     '.hist-riel.volviendo .hist-perilla { transition: transform .28s cubic-bezier(.2,.8,.2,1); }' +
     '.hist-riel.volviendo .hist-relleno { transition: width .28s cubic-bezier(.2,.8,.2,1); }' +
@@ -2687,7 +2693,7 @@ document.addEventListener('DOMContentLoaded', function() {
     '.hist-aviso::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: #F2B84B; flex-shrink: 0; transform: translateY(-1px); }' +
     // pantallas angostas: un poco menos de margen y la etiqueta más chica, para que quepa
     '@media (max-width: 340px) { .hist-cabeza { padding: 14px 12px; } .hist-interior { padding: 0 12px 14px; } .hist-desliza-txt { font-size: 12.5px; letter-spacing: 0; } }' +
-    '@media (prefers-reduced-motion: reduce) { .hist-riel.volviendo .hist-perilla, .hist-riel.volviendo .hist-relleno, .hist-flecha, .hist-cuerpo, .hist-desliza-txt { transition: none; } }';
+    '@media (prefers-reduced-motion: reduce) { .hist-pedido, .hist-riel.volviendo .hist-perilla, .hist-riel.volviendo .hist-relleno, .hist-flecha, .hist-cuerpo, .hist-desliza-txt { transition: none; } }';
   document.head.appendChild(estiloRestablecer);
 
   // devuelve 'listo' (todo entró), 'avisos' (entró, con avisos) o 'nada' (el carrito no se tocó)
@@ -2727,18 +2733,27 @@ document.addEventListener('DOMContentLoaded', function() {
     return lineas.length ? 'avisos' : 'listo';
   }
 
-  // ---- El interruptor: se arrastra con el dedo (o Enter / espacio) y se completa al pasar el 86% del recorrido ----
+  // ---- El interruptor: se arrastra con el dedo (o Enter / espacio) y se completa al soltar pasando el 50% del recorrido ----
   function armarDeslizador(caja, alCompletar) {
     var riel = caja.querySelector('.hist-riel');
     var perilla = caja.querySelector('.hist-perilla');
     var etiqueta = caja.querySelector('.hist-desliza-txt');
     var estado = 'libre';                   // 'libre', 'ocupado' o 'aviso'
     var x = 0, desde = 0, max = 0, arrastrando = false, completadoEn = 0;
+    var UMBRAL = 0.5, pasado = false;     // pasado: la perilla está en el 50% o más (clase "libre")
     function recorrido() { return Math.max(0, riel.clientWidth - perilla.offsetWidth - 8); }
     function poner(v) {
       x = v;
       riel.style.setProperty('--x', v + 'px');
-      if (estado === 'libre') etiqueta.style.opacity = String(Math.max(0, 1 - (max ? v / max : 0) * 1.5));
+      if (estado !== 'libre') return;
+      // pasado el 50% (sin soltar): el riel se marca "libre" y vibra una sola vez al cruzar hacia adelante
+      var ya = max > 0 && v >= max * UMBRAL;
+      if (ya !== pasado) {
+        pasado = ya;
+        riel.classList.toggle('libre', ya);
+        if (ya && navigator.vibrate) navigator.vibrate(15);
+      }
+      etiqueta.style.opacity = ya ? '0' : String(Math.max(0, 1 - v / ((max * 0.4) || 1)));
     }
     function suave(v) {
       riel.classList.add('volviendo');
@@ -2751,6 +2766,8 @@ document.addEventListener('DOMContentLoaded', function() {
       estado = 'ocupado';
       completadoEn = Date.now();
       max = recorrido();
+      pasado = false;
+      riel.classList.remove('libre');
       suave(max);
       var resultado = alCompletar();
       etiqueta.style.opacity = '';
@@ -2784,7 +2801,7 @@ document.addEventListener('DOMContentLoaded', function() {
     perilla.addEventListener('pointerup', function() {
       if (!arrastrando) return;
       arrastrando = false;
-      if (x >= max * 0.86) completar(); else suave(0);
+      if (max > 0 && x >= max * UMBRAL) completar(); else suave(0);
     });
     perilla.addEventListener('pointercancel', function() {
       if (!arrastrando) return;
