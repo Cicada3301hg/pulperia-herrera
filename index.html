@@ -2542,16 +2542,29 @@ document.addEventListener('DOMContentLoaded', function() {
   estiloVentana.textContent =
     '#modalHistorial .modal-head { padding: 20px 20px 0; gap: 0; }' +
     '#modalHistorial .modal-body { padding: 8px 20px 20px; }' +
-    // cada pedido: una pantalla hundida con una trama de puntos finos
-    '.hist-pedido { margin-bottom: 14px; padding: 14px 16px 16px; border-radius: 18px; background: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1.3px) 0 0 / 7px 7px, var(--hundido); box-shadow: var(--hundido-sombra); }' +
+    // cada pedido: una tarjeta gris grafito que se despliega al tocar su cabecera
+    '.hist-pedido { margin-bottom: 12px; border-radius: 18px; background: linear-gradient(180deg, #2B2F37, #23272E); border: 1px solid #3A3F49; box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 6px 14px rgba(0,0,0,.35); overflow: hidden; }' +
     '.hist-pedido:last-child { margin-bottom: 0; }' +
-    '.hist-fecha { margin-bottom: 6px; text-align: center; font-size: 10.5px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: rgba(154,168,194,.7); }' +
-    // cada fila: la cantidad en un recuadro hundido y el nombre a la derecha, separadas por una línea punteada
-    '.hist-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px dotted rgba(255,255,255,.09); font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--ink); }' +
+    '.hist-cabeza { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 16px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }' +
+    '.hist-cabeza:focus-visible { outline: 2px solid #C9A24B; outline-offset: -2px; border-radius: 18px; }' +
+    '.hist-cuando { display: flex; flex-direction: column; gap: 2px; }' +
+    '.hist-fecha { font-size: 16px; font-weight: 600; letter-spacing: .01em; color: #EDEFF3; }' +
+    '.hist-hora { font-size: 12.5px; font-weight: 500; color: #7D8493; font-variant-numeric: tabular-nums; }' +
+    '.hist-cuantos { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 500; color: #A9B0BD; white-space: nowrap; }' +
+    '.hist-flecha { width: 18px; height: 18px; flex-shrink: 0; color: #C9A24B; transition: transform .28s cubic-bezier(.2,.8,.2,1); }' +
+    '.hist-pedido.abierto .hist-flecha { transform: rotate(180deg); }' +
+    // el contenido se despliega con suavidad (de 0fr a 1fr)
+    '.hist-cuerpo { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s cubic-bezier(.2,.8,.2,1); }' +
+    '.hist-pedido.abierto .hist-cuerpo { grid-template-rows: 1fr; }' +
+    '.hist-cuerpo > div { overflow: hidden; min-height: 0; }' +
+    '.hist-interior { padding: 0 16px 16px; }' +
+    // la lista: la cantidad como número simple a la izquierda y el nombre a la derecha
+    '.hist-items { padding: 4px 0 2px; border-top: 1px solid rgba(255,255,255,.07); }' +
+    '.hist-item { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.055); }' +
     '.hist-item:last-child { border-bottom: none; }' +
-    '.hist-cant { display: flex; align-items: center; justify-content: center; width: 46px; height: 30px; flex-shrink: 0; border-radius: 9px; background: rgba(0,0,0,.45); box-shadow: inset 0 2px 5px rgba(0,0,0,.7), inset 0 -1px 0 rgba(255,255,255,.04); font-size: 13.5px; font-weight: 800; color: #4CC261; font-variant-numeric: tabular-nums; text-shadow: 0 0 6px rgba(76,194,97,.55); }' +
-    '.hist-item.no-esta { color: var(--ink-mute); }' +
-    '.hist-item.no-esta .hist-cant { color: var(--ink-mute); text-shadow: none; }' +
+    '.hist-cant { text-align: right; font-size: 14px; font-weight: 600; color: #A9B0BD; font-variant-numeric: tabular-nums; }' +
+    '.hist-nombre { font-size: 15px; font-weight: 500; line-height: 1.35; color: #EDEFF3; }' +
+    '.hist-item.no-esta .hist-cant, .hist-item.no-esta .hist-nombre { color: #7D8493; }' +
     '#modalHistorial .cart-total { padding: 6px 22px calc(12px + env(safe-area-inset-bottom, 0px)); background: none; border-top: none; }' +
     '#modalHistorial .cart-total::before { display: none; }' +
     '#modalHistorial .btn-cerrar-secondary { width: 100%; background: none; border: none; box-shadow: none; padding: 13px 10px 6px; font-size: 14px; font-weight: 600; color: var(--ink-soft); }';
@@ -2569,10 +2582,10 @@ document.addEventListener('DOMContentLoaded', function() {
   var cuerpoHist = document.getElementById('histBody');
   Panel.marcar(ventana.querySelector('.modal-sheet'));
 
-  function fechaTexto(ms) {
+  function fechaPartes(ms) {
     var d = new Date(ms);
     function dos(n) { return String(n).padStart(2, '0'); }
-    return dos(d.getDate()) + '/' + dos(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(-2) + ' · ' + dos(d.getHours()) + ':' + dos(d.getMinutes());
+    return { fecha: dos(d.getDate()) + '/' + dos(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(-2), hora: dos(d.getHours()) + ':' + dos(d.getMinutes()) };
   }
   function buscarProducto(id) { return productos.find(function(p) { return p.id === id; }); }
 
@@ -2584,14 +2597,21 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     cuerpoHist.removeAttribute('data-esperando');
-    leerHistorial().forEach(function(pedido) {
+    var FLECHA = '<svg class="hist-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    leerHistorial().forEach(function(pedido, n) {
       var tarjeta = document.createElement('div');
       tarjeta.className = 'hist-pedido';
-      var html = '<div class="hist-fecha">' + escaparHTML(fechaTexto(pedido.fecha)) + '</div>';
-      html += '<div class="hist-items">';
+      var cuando = fechaPartes(pedido.fecha);
+      var filas = (pedido.items || []).length;
+      var html = '<button class="hist-cabeza" type="button" aria-expanded="false" aria-controls="histCuerpo' + n + '">' +
+          '<span class="hist-cuando"><span class="hist-fecha">' + escaparHTML(cuando.fecha) + '</span><span class="hist-hora">' + escaparHTML(cuando.hora) + '</span></span>' +
+          '<span class="hist-cuantos">' + filas + (filas === 1 ? ' producto' : ' productos') + FLECHA + '</span>' +
+        '</button>' +
+        '<div class="hist-cuerpo" id="histCuerpo' + n + '" inert><div><div class="hist-interior">' +
+        '<div class="hist-items">';
       (pedido.items || []).forEach(function(it) {
         var p = buscarProducto(it.id);
-        html += '<div class="hist-item' + (p ? '' : ' no-esta') + '"><span class="hist-cant">' + escaparHTML(it.cantidad) + ' ×</span><span>' + escaparHTML(p ? (p.nombreApp || p.nombre) : 'Producto que ya no está disponible') + '</span></div>';
+        html += '<div class="hist-item' + (p ? '' : ' no-esta') + '"><span class="hist-cant">' + escaparHTML(it.cantidad) + '</span><span class="hist-nombre">' + escaparHTML(p ? (p.nombreApp || p.nombre) : 'Producto que ya no está disponible') + '</span></div>';
       });
       html += '</div><div class="hist-avisos"></div>' +
         '<div class="hist-desliza">' +
@@ -2600,11 +2620,23 @@ document.addEventListener('DOMContentLoaded', function() {
             '<div class="hist-desliza-txt" aria-live="polite">Desliza para restablecer</div>' +
             '<div class="hist-perilla" role="button" tabindex="0" aria-label="Desliza para restablecer este pedido"><i></i><i></i><i></i></div>' +
           '</div>' +
-          '<span class="hist-led" aria-hidden="true"></span>' +
-        '</div>';
+        '</div>' +
+        '</div></div></div>';
       tarjeta.innerHTML = html;
+      tarjeta.querySelector('.hist-cabeza').addEventListener('click', function() {
+        abrirPedido(tarjeta.classList.contains('abierto') ? null : tarjeta);
+      });
       armarDeslizador(tarjeta.querySelector('.hist-desliza'), function() { return restablecer(pedido, tarjeta); });
       cuerpoHist.appendChild(tarjeta);
+    });
+  }
+  // solo un pedido abierto a la vez; el contenido de los cerrados no recibe el foco del teclado
+  function abrirPedido(elegido) {
+    cuerpoHist.querySelectorAll('.hist-pedido').forEach(function(t) {
+      var abierto = t === elegido;
+      t.classList.toggle('abierto', abierto);
+      t.querySelector('.hist-cabeza').setAttribute('aria-expanded', abierto ? 'true' : 'false');
+      t.querySelector('.hist-cuerpo').inert = !abierto;
     });
   }
   function abrirHistorial() {
@@ -2631,31 +2663,31 @@ document.addEventListener('DOMContentLoaded', function() {
   // ---- "Restablecer": arma el carrito con los precios y el stock de hoy; lo que no se pudo, se avisa en el mismo pedido ----
   var estiloRestablecer = document.createElement('style');
   estiloRestablecer.textContent =
-    // el interruptor: un riel hundido con una perilla que se desliza y un LED a la derecha
-    '.hist-desliza { display: flex; align-items: center; gap: 10px; margin-top: 14px; }' +
-    '.hist-riel { position: relative; flex: 1; min-width: 0; height: 58px; border-radius: 29px; background: #03070F; box-shadow: inset 0 3px 9px rgba(0,0,0,.9), inset 0 -1px 0 rgba(255,255,255,.05), 0 1px 0 rgba(255,255,255,.08); overflow: hidden; }' +
-    '.hist-relleno { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--x, 0px) + 58px); border-radius: 29px; background: linear-gradient(90deg, rgba(76,194,97,.04) 0%, rgba(76,194,97,.20) 100%); pointer-events: none; }' +
-    '.hist-desliza-txt { position: absolute; top: 0; bottom: 0; left: 60px; right: 14px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; letter-spacing: .02em; color: rgba(154,168,194,.85); white-space: nowrap; pointer-events: none; }' +
-    '.hist-perilla { position: absolute; left: 5px; top: 5px; display: flex; align-items: center; justify-content: center; gap: 4px; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(180deg, #3B4E78 0%, #202C4A 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -2px 4px rgba(0,0,0,.45), 0 4px 10px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.6); transform: translateX(var(--x, 0px)); touch-action: none; cursor: grab; z-index: 1; }' +
-    '.hist-perilla:active { cursor: grabbing; }' +
-    '.hist-perilla:focus-visible { outline: 2px solid rgba(76,194,97,.85); outline-offset: 2px; }' +
-    '.hist-perilla i { width: 2px; height: 16px; border-radius: 1px; background: rgba(255,255,255,.30); box-shadow: 1px 0 0 rgba(0,0,0,.45); }' +
-    // al soltar antes de tiempo, la perilla vuelve con suavidad
-    '.hist-riel.volviendo .hist-perilla { transition: transform .35s cubic-bezier(0.32, 0.72, 0, 1); }' +
-    '.hist-riel.volviendo .hist-relleno { transition: width .35s cubic-bezier(0.32, 0.72, 0, 1); }' +
-    // al final del recorrido, la etiqueta pasa al lado izquierdo de la perilla
-    '.hist-desliza.fin .hist-desliza-txt { left: 14px; right: 60px; color: var(--ink); }' +
+    // el interruptor: un riel oscuro con una perilla gris de aro dorado
+    '.hist-desliza { margin-top: 14px; }' +
+    '.hist-riel { position: relative; height: 52px; border-radius: 26px; background: #14171C; border: 1px solid #2F343D; box-shadow: inset 0 2px 6px rgba(0,0,0,.6); overflow: hidden; user-select: none; -webkit-user-select: none; }' +
+    // relleno detrás de la perilla: dorado tenue al deslizar, verde si todo salió bien, ámbar si hubo avisos
+    '.hist-relleno { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--x, 0px) + 46px); border-radius: 26px; background: linear-gradient(90deg, rgba(201,162,75,.04), rgba(201,162,75,.22)); pointer-events: none; }' +
+    '.hist-desliza.ok .hist-relleno { background: linear-gradient(90deg, rgba(76,194,97,.06), rgba(76,194,97,.28)); }' +
+    '.hist-desliza.aviso .hist-relleno { background: linear-gradient(90deg, rgba(242,184,75,.06), rgba(242,184,75,.26)); }' +
+    '.hist-desliza-txt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 22px 0 62px; font-size: 13.5px; font-weight: 600; letter-spacing: .02em; color: #A9B0BD; text-align: center; white-space: nowrap; pointer-events: none; transition: opacity .15s, color .2s; }' +
+    '.hist-desliza.fin .hist-desliza-txt { padding: 0 62px 0 22px; color: #EDEFF3; }' +
     '.hist-desliza.ok .hist-desliza-txt { color: #4CC261; }' +
     '.hist-desliza.aviso .hist-riel { cursor: pointer; }' +
-    '.hist-led { width: 10px; height: 10px; flex-shrink: 0; border-radius: 50%; background: #1A2438; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); transition: background .25s ease, box-shadow .25s ease; }' +
-    '.hist-desliza.ok .hist-led { background: #4CC261; box-shadow: 0 0 8px rgba(76,194,97,.9); }' +
-    '.hist-desliza.aviso .hist-led { background: #F2B84B; box-shadow: 0 0 8px rgba(242,184,75,.9); }' +
-    // avisos en ámbar, con un puntito que brilla
-    '.hist-aviso { display: flex; align-items: baseline; gap: 7px; margin-top: 8px; color: #F2B84B; font-size: 12.5px; font-weight: 600; line-height: 1.4; }' +
-    '.hist-aviso::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #F2B84B; box-shadow: 0 0 6px rgba(242,184,75,.85); flex-shrink: 0; transform: translateY(-1px); }' +
+    '.hist-perilla { position: absolute; left: 4px; top: 4px; display: flex; align-items: center; justify-content: center; gap: 3px; width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(180deg, #505663, #30353E); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 3px 7px rgba(0,0,0,.55), 0 0 0 1px rgba(201,162,75,.55); transform: translateX(var(--x, 0px)); touch-action: none; cursor: grab; z-index: 1; }' +
+    '.hist-perilla:active { cursor: grabbing; }' +
+    '.hist-perilla:focus-visible { outline: 2px solid #C9A24B; outline-offset: 3px; }' +
+    '.hist-perilla i { display: block; width: 2px; height: 14px; border-radius: 1px; background: rgba(0,0,0,.45); box-shadow: 1px 0 0 rgba(255,255,255,.16); }' +
+    // al soltar antes de tiempo, la perilla vuelve con suavidad
+    '.hist-riel.volviendo .hist-perilla { transition: transform .28s cubic-bezier(.2,.8,.2,1); }' +
+    '.hist-riel.volviendo .hist-relleno { transition: width .28s cubic-bezier(.2,.8,.2,1); }' +
+    // avisos en ámbar, con un puntito ámbar sin brillo
+    '.hist-avisos { margin-top: 4px; }' +
+    '.hist-aviso { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; color: #F2B84B; font-size: 12.5px; font-weight: 500; line-height: 1.4; }' +
+    '.hist-aviso::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: #F2B84B; flex-shrink: 0; transform: translateY(-1px); }' +
     // pantallas angostas: un poco menos de margen y la etiqueta más chica, para que quepa
-    '@media (max-width: 340px) { .hist-pedido { padding: 14px 12px 14px; } .hist-desliza-txt { font-size: 12px; letter-spacing: 0; } }' +
-    '@media (prefers-reduced-motion: reduce) { .hist-riel.volviendo .hist-perilla, .hist-riel.volviendo .hist-relleno, .hist-led { transition: none; } }';
+    '@media (max-width: 340px) { .hist-cabeza { padding: 14px 12px; } .hist-interior { padding: 0 12px 14px; } .hist-desliza-txt { font-size: 12.5px; letter-spacing: 0; } }' +
+    '@media (prefers-reduced-motion: reduce) { .hist-riel.volviendo .hist-perilla, .hist-riel.volviendo .hist-relleno, .hist-flecha, .hist-cuerpo, .hist-desliza-txt { transition: none; } }';
   document.head.appendChild(estiloRestablecer);
 
   // devuelve 'listo' (todo entró), 'avisos' (entró, con avisos) o 'nada' (el carrito no se tocó)
@@ -2701,13 +2733,12 @@ document.addEventListener('DOMContentLoaded', function() {
     var perilla = caja.querySelector('.hist-perilla');
     var etiqueta = caja.querySelector('.hist-desliza-txt');
     var estado = 'libre';                   // 'libre', 'ocupado' o 'aviso'
-    var x = 0, desde = 0, arrastrando = false, completadoEn = 0;
-    function recorrido() { return Math.max(0, riel.clientWidth - perilla.offsetWidth - 10); }
+    var x = 0, desde = 0, max = 0, arrastrando = false, completadoEn = 0;
+    function recorrido() { return Math.max(0, riel.clientWidth - perilla.offsetWidth - 8); }
     function poner(v) {
       x = v;
       riel.style.setProperty('--x', v + 'px');
-      var max = recorrido();
-      if (estado === 'libre') etiqueta.style.opacity = String(Math.max(0, 1 - (max ? v / max : 0) * 1.6));
+      if (estado === 'libre') etiqueta.style.opacity = String(Math.max(0, 1 - (max ? v / max : 0) * 1.5));
     }
     function suave(v) {
       riel.classList.add('volviendo');
@@ -2719,7 +2750,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (estado !== 'libre') return;
       estado = 'ocupado';
       completadoEn = Date.now();
-      suave(recorrido());
+      max = recorrido();
+      suave(max);
       var resultado = alCompletar();
       etiqueta.style.opacity = '';
       if (resultado === 'listo') {
@@ -2738,6 +2770,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     perilla.addEventListener('pointerdown', function(ev) {
       if (estado !== 'libre') return;
+      max = recorrido();   // se mide al empezar: con el pedido cerrado, el riel mide 0
       arrastrando = true;
       desde = ev.clientX - x;
       riel.classList.remove('volviendo');
@@ -2746,12 +2779,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     perilla.addEventListener('pointermove', function(ev) {
       if (!arrastrando) return;
-      poner(Math.min(recorrido(), Math.max(0, ev.clientX - desde)));
+      poner(Math.min(max, Math.max(0, ev.clientX - desde)));
     });
     perilla.addEventListener('pointerup', function() {
       if (!arrastrando) return;
       arrastrando = false;
-      if (x >= recorrido() * 0.86) completar(); else suave(0);
+      if (x >= max * 0.86) completar(); else suave(0);
     });
     perilla.addEventListener('pointercancel', function() {
       if (!arrastrando) return;
