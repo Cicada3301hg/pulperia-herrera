@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#1A2942">
 <title>Catálogo - Pulpería Herrera</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root{
   --bg-deep: #1A2942;
@@ -68,12 +68,16 @@ body.modal-open { overflow: hidden; position: fixed; width: 100%; }
   border-bottom: none;
 }
 
-.header-top { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 18px; max-width: 720px; margin-left: auto; margin-right: auto; position: relative; }
-.header-top::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 60px; height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(232, 184, 90, 0.6) 50%, transparent 100%); pointer-events: none; }
-.brand-icon { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; color: var(--gold); filter: drop-shadow(0 2px 6px rgba(232, 184, 90, 0.35)); flex-shrink: 0; }
-.header-brand { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--ink); display: flex; align-items: baseline; gap: 6px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
-.brand-pulperia { color: var(--ink); font-weight: 700; letter-spacing: 0.2px; }
-.brand-herrera { background: linear-gradient(135deg, var(--green) 0%, #4CAF50 50%, var(--gold) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; font-weight: 900; letter-spacing: -0.3px; filter: drop-shadow(0 1px 4px var(--green-glow)); }
+/* ⬇️ ENCABEZADO APILADO: casita dorada con líneas a los lados y, debajo, el nombre en 3D centrado */
+/* 46px reservados a cada lado (el ancho del botón del historial) en las dos filas: todo queda centrado de verdad aunque el botón no se vea */
+.header-casa { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto 10px; max-width: 720px; padding: 0 46px; color: #d4a64a; }
+.header-casa svg { display: block; flex-shrink: 0; }
+.header-casa-linea { flex: 1; max-width: 100px; height: 1px; background: linear-gradient(90deg, transparent, #d4a64a); }
+.header-casa-linea.der { background: linear-gradient(90deg, #d4a64a, transparent); }
+.header-top { display: flex; align-items: center; justify-content: center; margin-bottom: 18px; max-width: 720px; margin-left: auto; margin-right: auto; padding: 0 46px; position: relative; }
+.header-brand { font-family: 'Cinzel', Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; letter-spacing: 1.2px; white-space: nowrap; color: #f6f8fc; text-shadow: 0 1px 0 #c3ccdf, 0 2px 0 #a3b0cc, 0 3px 0 #8493b6, 0 4px 0 #65759d, 0 5px 0 #4a5a82, 0 9px 8px rgba(0,0,0,.5); }
+/* pantallas angostas: el nombre un poco más chico para que quepa en una sola línea */
+@media (max-width: 340px) { .header-brand { font-size: 18px; letter-spacing: 1px; } }
 
 /* ⬇️ BARRA DE BÚSQUEDA HUNDIDA: ranura sólida, lupa a la izquierda y X a la derecha (mismo ancho), texto centrado */
 .search-wrap {
@@ -331,18 +335,17 @@ body.modal-open .dock{transform:translateY(100%);opacity:0;}
 <body>
 
 <div class="header" id="header">
+  <div class="header-casa" aria-hidden="true">
+    <span class="header-casa-linea"></span>
+    <svg width="38" height="38" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 23 L24 7 L43 23"/>
+      <path d="M11 20 V40 H37 V20"/>
+      <path d="M19 40 V32 a5 5 0 0 1 10 0 V40"/>
+    </svg>
+    <span class="header-casa-linea der"></span>
+  </div>
   <div class="header-top">
-    <div class="brand-icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 9l1-5h16l1 5"/>
-        <path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/>
-        <path d="M9 13a3 3 0 0 0 6 0"/>
-      </svg>
-    </div>
-    <div class="header-brand">
-      <span class="brand-pulperia">Pulpería</span>
-      <span class="brand-herrera">Herrera</span>
-    </div>
+    <div class="header-brand">Pulpería Herrera</div>
   </div>
   <div class="search-wrap">
     <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
