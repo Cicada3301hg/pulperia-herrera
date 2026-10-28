@@ -1405,6 +1405,8 @@ document.addEventListener('DOMContentLoaded', function() {
   lastY = window.scrollY;
   window.addEventListener('scroll', onScroll, { passive: true });
   const searchClear = document.getElementById('searchClear');
+  // al cambiar la búsqueda, la vista vuelve al inicio (la barra con lo escrito y el primer resultado), solo si estaba más abajo
+  function subirAlInicioDeResultados() { if (window.scrollY > 0) window.scrollTo(0, 0); }
   document.getElementById('searchInput').addEventListener('input', function() {
     const val = this.value;
     searchClear.hidden = val === '';
@@ -1412,6 +1414,7 @@ document.addEventListener('DOMContentLoaded', function() {
     searchTimer = setTimeout(function() {
       busqueda = val;
       aplicarFiltros();
+      subirAlInicioDeResultados();
     }, 250);
   });
   // la X: borra el texto, vuelve a mostrar todos los productos y devuelve el foco a la barra
@@ -1422,6 +1425,7 @@ document.addEventListener('DOMContentLoaded', function() {
     clearTimeout(searchTimer);
     busqueda = '';
     aplicarFiltros();
+    subirAlInicioDeResultados();
     input.focus();
   });
   document.getElementById('pmMas').addEventListener('click', modalMas);
