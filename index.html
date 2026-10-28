@@ -1406,7 +1406,18 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('scroll', onScroll, { passive: true });
   const searchClear = document.getElementById('searchClear');
   // al cambiar la búsqueda, la vista vuelve al inicio (la barra con lo escrito y el primer resultado), solo si estaba más abajo
-  function subirAlInicioDeResultados() { if (window.scrollY > 0) window.scrollTo(0, 0); }
+  function subirAlInicioDeResultados() {
+    if (window.scrollY > 0) window.scrollTo(0, 0);
+    // con el teclado abierto, la parte visible puede quedar corrida hacia abajo (visualViewport.offsetTop > 0)
+    // y scrollTo no la mueve: en el siguiente cuadro se lleva el tope de la página a la vista, una sola vez
+    const vv = window.visualViewport;
+    if (!vv) return;
+    requestAnimationFrame(function() {
+      if (vv.offsetTop > 0 && document.activeElement === document.getElementById('searchInput')) {
+        document.documentElement.scrollIntoView({ block: 'start' });
+      }
+    });
+  }
   document.getElementById('searchInput').addEventListener('input', function() {
     const val = this.value;
     searchClear.hidden = val === '';
