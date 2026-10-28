@@ -2541,7 +2541,8 @@ document.addEventListener('DOMContentLoaded', function() {
   var estiloVentana = document.createElement('style');
   estiloVentana.textContent =
     '#modalHistorial .modal-head { padding: 20px 20px 0; gap: 0; }' +
-    '#modalHistorial .modal-body { padding: 8px 20px 20px; }' +
+    // 44px abajo: la sombra de la última tarjeta (hasta ~41px abierta) cabe entera y no se corta en una línea recta
+    '#modalHistorial .modal-body { padding: 8px 20px 44px; }' +
     // solo esta ventana: hoja gris grafito (la línea dorada de arriba viene de .modal-sheet::before y se mantiene)
     '#modalHistorial .modal-sheet.panel { background: repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0 1px, transparent 1px 5px), linear-gradient(180deg, #262A31 0%, #1A1D23 100%); }' +
     // cada pedido: una tarjeta gris grafito que se despliega al tocar su cabecera
