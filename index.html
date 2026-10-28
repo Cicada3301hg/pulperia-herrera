@@ -2326,13 +2326,24 @@ document.addEventListener('DOMContentLoaded', function() {
     '#modalCarrito .pie-enlaces button { position: static; display: flex; align-items: center; justify-content: center; gap: 8px; width: auto; height: auto; padding: 14px 8px 8px; border: none; border-radius: 0; background: none; box-shadow: none; font-size: 14px; font-weight: 700; color: var(--ink-soft); }' +
     '#modalCarrito .pie-enlaces .btn-vaciar-float { color: #FC8181; }' +
     '#modalCarrito .pie-enlaces button:active { transform: none; opacity: .65; background: none; }' +
-    '#modalCarrito .pie-enlaces svg { width: 16px; height: 16px; flex-shrink: 0; }';
+    '#modalCarrito .pie-enlaces svg { width: 16px; height: 16px; flex-shrink: 0; }' +
+    // pantalla compacta: el título va dentro (en lugar de "Total"), dígitos más chicos y sin la regla de rayitas
+    '#modalCarrito .modal-titulo { display: none; }' +
+    '#modalCarrito .pn-pantalla { padding: 10px 10px 9px; }' +
+    '#modalCarrito .pn-top { margin-bottom: 7px; padding-left: .28em; font-size: 11px; font-weight: 600; letter-spacing: .28em; color: rgba(154,168,194,.8); }' +
+    '#modalCarrito .dm { gap: 5px; min-height: 30px; }' +
+    '#modalCarrito .dm-g { grid-template-columns: repeat(5, 3.2px); grid-auto-rows: 3.2px; gap: 1.3px; }' +
+    '#modalCarrito .dm-g i { width: 3.2px; height: 3.2px; }' +
+    '#modalCarrito .dm-g i.on { box-shadow: 0 0 4px rgba(76,194,97,.85), 0 0 1px rgba(210,255,215,.9); }' +
+    '#modalCarrito .dm-g.angosto { width: 5px; }' +
+    '#modalCarrito .dm-pre { margin-right: 2px; font-size: 26px; text-shadow: 0 0 7px rgba(76,194,97,.75), 0 0 1px rgba(210,255,215,.9); }' +
+    '#modalCarrito .pn-pie { margin-top: 7px; font-size: 13px; }';
   document.head.appendChild(estilo);
 
   var hoja = document.querySelector('#modalCarrito .modal-sheet');
   Panel.marcar(hoja);
   var cabecera = hoja.querySelector('.modal-head');
-  cabecera.insertAdjacentHTML('beforeend', '<div class="pn-pantalla"><div class="pn-top"><span>Total</span></div><div class="dm" id="cartDM"></div><div class="pn-pie" id="cartResumen"></div></div><div class="pn-regla"></div>');
+  cabecera.insertAdjacentHTML('beforeend', '<div class="pn-pantalla"><div class="pn-top"><span>Tu pedido</span></div><div class="dm" id="cartDM"></div><div class="pn-pie" id="cartResumen"></div></div>');
   var pantalla = Panel.pantalla(document.getElementById('cartDM'));
   var resumen = document.getElementById('cartResumen');
   var cuerpo = document.getElementById('cartBody');
