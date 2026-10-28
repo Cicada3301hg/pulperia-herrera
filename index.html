@@ -69,12 +69,12 @@ body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 }
 
 /* ⬇️ ENCABEZADO APILADO: casita dorada con líneas a los lados y, debajo, el nombre en 3D centrado */
-/* 46px reservados a cada lado (el ancho del botón del historial) en las dos filas: todo queda centrado de verdad aunque el botón no se vea */
+/* la fila de la casita reserva 46px a cada lado: las líneas doradas se adaptan al ancho de la pantalla */
 .header-casa { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto 10px; max-width: 720px; padding: 0 46px; color: #d4a64a; }
 .header-casa svg { display: block; flex-shrink: 0; }
 .header-casa-linea { flex: 1; max-width: 100px; height: 1px; background: linear-gradient(90deg, transparent, #d4a64a); }
 .header-casa-linea.der { background: linear-gradient(90deg, #d4a64a, transparent); }
-.header-top { display: flex; align-items: center; justify-content: center; margin-bottom: 18px; max-width: 720px; margin-left: auto; margin-right: auto; padding: 0 46px; position: relative; }
+.header-top { display: flex; align-items: center; justify-content: center; margin-bottom: 18px; max-width: 720px; margin-left: auto; margin-right: auto; }
 .header-brand { font-family: 'Cinzel', Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; letter-spacing: 1.2px; white-space: nowrap; color: #f6f8fc; text-shadow: 0 1px 0 #c3ccdf, 0 2px 0 #a3b0cc, 0 3px 0 #8493b6, 0 4px 0 #65759d, 0 5px 0 #4a5a82, 0 9px 8px rgba(0,0,0,.5); }
 /* pantallas angostas: el nombre un poco más chico para que quepa en una sola línea */
 @media (max-width: 340px) { .header-brand { font-size: 18px; letter-spacing: 1px; } }
@@ -83,11 +83,12 @@ body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 .search-wrap {
   max-width: 720px; margin: 0 auto; position: relative;
   height: 50px; border-radius: 14px;
-  background: linear-gradient(180deg, #071126 0%, #0b1a38 100%);
+  background: linear-gradient(180deg, #050d20 0%, #0a1733 100%);
   border: 1px solid #040a18;
-  box-shadow: inset 0 3px 7px rgba(0,0,0,.65), inset 0 -1px 0 rgba(255,255,255,.07);
+  box-shadow: inset 0 6px 12px rgba(0,0,0,.8), inset 0 0 0 1px rgba(0,0,0,.35), inset 0 -2px 0 rgba(255,255,255,.1);
 }
-.search-wrap:focus-within { border-color: #d4a64a; }
+/* el aro dorado se enciende solo cuando se escribe (no al tocar el reloj ni la X) */
+.search-wrap:has(.search-input:focus) { border-color: #d4a64a; }
 
 .search-input {
   width: 100%; height: 100%;
@@ -2504,13 +2505,12 @@ document.addEventListener('DOMContentLoaded', function() {
   var MAX_PEDIDOS = 10;
   var estilo = document.createElement('style');
   estilo.textContent =
-    // botón junto al título: una tecla oscura con un reloj iluminado
-    '.hist-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: none; border-radius: 13px; background: linear-gradient(180deg, #2B3B5E 0%, #1B2842 100%); color: #4CC261; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.20), inset 0 -2px 3px rgba(0,0,0,.45), 0 3px 6px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); transition: transform .1s ease, box-shadow .1s ease; }' +
+    // botón del historial dentro de la barra: un pozo redondo hundido en el espacio de 50px de la derecha (el mismo de la X)
+    '.hist-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: none; border-radius: 50%; background: linear-gradient(180deg, #050d20 0%, #0b1a38 100%); color: #3fcf7a; cursor: pointer; box-shadow: inset 0 2px 5px rgba(0,0,0,.75), 0 1px 0 rgba(255,255,255,.1); z-index: 2; }' +
     '.hist-btn[hidden] { display: none; }' +
-    '.hist-btn svg { filter: drop-shadow(0 0 5px rgba(76,194,97,.75)); }' +
-    '.hist-btn:active { transform: translateY(calc(-50% + 1.5px)); box-shadow: inset 0 2px 5px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.6); }' +
-    // teléfonos muy angostos: el botón un poco más chico y más al borde, para no tocar "Herrera"
-    '@media (max-width: 340px) { .hist-btn { width: 34px; height: 34px; right: -6px; border-radius: 11px; } }';
+    // con texto escrito se ve la X y el reloj se esconde; al borrar, vuelve (si hay pedidos)
+    '.search-clear:not([hidden]) ~ .hist-btn { display: none; }' +
+    '.hist-btn:focus-visible { outline: 1px solid #d4a64a; outline-offset: 2px; }';
   document.head.appendChild(estilo);
 
   function leerHistorial() {
@@ -2528,8 +2528,8 @@ document.addEventListener('DOMContentLoaded', function() {
   botonHistorial.type = 'button';
   botonHistorial.className = 'hist-btn';
   botonHistorial.setAttribute('aria-label', 'Mis pedidos');
-  botonHistorial.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><polyline points="3 4 3 9 8 9"></polyline><polyline points="12 7 12 12 15 14"></polyline></svg>';
-  document.querySelector('.header-top').appendChild(botonHistorial);
+  botonHistorial.innerHTML = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><polyline points="3 4 3 9 8 9"></polyline><polyline points="12 7 12 12 15 14"></polyline></svg>';
+  document.querySelector('.search-wrap').appendChild(botonHistorial);
   function refrescarBoton() { botonHistorial.hidden = leerHistorial().length === 0; }
   refrescarBoton();
 
