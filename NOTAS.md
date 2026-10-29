@@ -28,9 +28,21 @@ Hoy la usa solo su dueño.
 - Barra de búsqueda hundida, más clara para que se note el hundido (55 px de alto): lupa dorada sola,
   sin círculo, a la izquierda; a la derecha, solo la X (si hay texto escrito). Se quitó el botón
   del reloj de la barra. El texto de ayuda y el texto escrito van alineados a la izquierda.
-- Menú de tres puntitos a la derecha del encabezado, a la altura de la casita: "Historial"
-  (abre Mis pedidos), "Cómo usar la app" y "Contactar a la pulpería". El historial ahora se abre
-  desde este menú. El botón atrás del teléfono cierra el menú.
+- Menú de tres puntitos a la derecha del encabezado: "Historial" (abre Mis pedidos), "Cómo usar la app"
+  y "Contactar a la pulpería". El historial se abre desde este menú.
+  - Botón: su centro queda a la mitad entre la línea dorada de la casita y el borde de arriba de las letras
+    del nombre, más 1,5 px (49,5 px a 390; 49,25 px a 320). A 390 px va 8 px más a la izquierda; en pantallas
+    de hasta 340 px se queda a la derecha como antes.
+  - Abierto: botón en relieve (degradado #2c4776 → #1b2f56 → #122244, filo #07101f y sombra), puntitos
+    #e9edf5, transición de 0,18 s. Cerrado: sin fondo y puntitos #8f9bb3.
+  - El menú queda centrado en la pantalla, con su borde de arriba igual al de la barra de búsqueda.
+  - Tres burbujas (5, 8 y 12 px) en línea recta del botón a la esquina de arriba a la derecha del menú,
+    en el 22, 52 y 82 % del camino. Siempre quedan al menos 2 px entre burbujas y entre la última y el menú;
+    si no caben, las tres se achican en la misma proporción (a 390 px: 3,8 / 6 / 9 px; a 320 px: 1,1 / 1,7 / 2,6 px).
+  - Animación: burbujas a los 0, 50 y 100 ms (0,14 s) y el menú a los 150 ms (escala 0,2 → 1 en 0,2 s).
+    Al cerrar, al revés: el menú en 0,12 s y luego las burbujas (0,1 s cada una), con 40 ms entre piezas.
+  - Se cierra apenas el dedo toca fuera del menú (también al empezar a deslizar), si la página se desplaza,
+    con los puntitos o con el botón atrás. Al cerrarse, la página se queda donde quedó.
 - Señal de luz que guía al Historial: con el primer pedido que se guarde se enciende una luz dorada
   (#f2c35a, 9 px) en el botón de tres puntitos y, con el menú abierto, al final del renglón "Historial".
   Se apagan para siempre al tocar "Historial"; cerrar el menú sin entrar no las apaga. Sale una sola vez
@@ -50,7 +62,7 @@ Hoy la usa solo su dueño.
 - `index.html` debe tener `<link rel="manifest" href="manifest.json">` (sin él, Chrome no permite instalar).
 - `manifest.json`: `short_name` "Mi Pul".
 - Cada vez que cambia `sw.js` o algo que el teléfono guarda en caché, se sube la versión del caché
-  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v21**.
+  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v22**.
 
 ## 5. Pendientes
 

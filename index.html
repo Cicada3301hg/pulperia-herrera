@@ -2853,17 +2853,31 @@ document.addEventListener('DOMContentLoaded', function() {
 (function() {
   var estilo = document.createElement('style');
   estilo.textContent =
-    // el botón no ocupa lugar: la casita, las líneas y el nombre no se mueven. Centrado en alto con la casita (20px + 30px/2);
-    // el borde derecho de los puntitos queda 2px por dentro del borde derecho de la barra de búsqueda
-    '.menu-btn { position: absolute; top: 15px; right: calc(max(16px, (100% - 720px) / 2) - 15.9px); width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: none; border-radius: 50%; background: transparent; color: #8f9bb3; cursor: pointer; -webkit-tap-highlight-color: transparent; }' +
-    '.menu-btn svg { display: block; width: 24px; height: 24px; }' +
-    '.menu-btn.abierto { background: rgba(255,255,255,.09); color: #e9edf5; }' +
+    // el botón no ocupa lugar: la casita, las líneas y el nombre no se mueven. Su centro queda a la mitad entre la línea dorada
+    // de la casita (35px) y el borde de arriba de las letras del nombre (61px), más 1,5px: 49,5px. Corrido 8px a la izquierda
+    '.menu-btn { position: absolute; top: 29.5px; right: calc(max(16px, (100% - 720px) / 2) - 7.9px); width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: none; border-radius: 50%; background: transparent; color: #8f9bb3; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: color .18s; }' +
+    // abierto: botón en relieve (va en una capa propia para que aparezca suave)
+    '.menu-btn::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(160deg,#2c4776 0%,#1b2f56 55%,#122244 100%); box-shadow: inset 0 1.5px 0 rgba(255,255,255,.18), inset 0 -2px 3px rgba(0,0,0,.35), 0 0 0 1px #07101f, 0 4px 7px rgba(0,0,0,.6); opacity: 0; transition: opacity .18s; }' +
+    '.menu-btn svg { position: relative; display: block; width: 24px; height: 24px; }' +
+    '.menu-btn.abierto { color: #e9edf5; }' +
+    '.menu-btn.abierto::before { opacity: 1; }' +
+    // pantallas angostas: el botón se queda a la derecha (el borde derecho de los puntitos 2px por dentro del de la barra)
+    // y su centro en 49,25px (las letras del nombre de 22,5px empiezan en 60,5px)
+    '@media (max-width: 340px) { .menu-btn { top: 29.25px; right: calc(max(16px, (100% - 720px) / 2) - 15.9px); } }' +
     // capa invisible: un toque afuera cierra el menú sin activar lo de abajo
     '.menu-capa { position: fixed; inset: 0; z-index: 2999; background: transparent; }' +
-    '.menu-ph { position: fixed; z-index: 3000; box-sizing: border-box; width: min(290px, calc(100vw - 32px)); padding: 6px; border-radius: 18px; background: linear-gradient(180deg,#26406b,#1c3057); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 1px #081227, 0 16px 34px rgba(0,0,0,.65); transform-origin: top right; animation: menuCrece .16s cubic-bezier(.2,.9,.3,1), menuAparece .12s linear; }' +
-    '.menu-capa[hidden], .menu-ph[hidden] { display: none; }' +
-    '@keyframes menuCrece { from { transform: scale(.6); } to { transform: scale(1); } }' +
+    '.menu-ph { position: fixed; z-index: 3000; box-sizing: border-box; width: min(290px, calc(100vw - 32px)); padding: 6px; border-radius: 18px; background: linear-gradient(180deg,#26406b,#1c3057); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 1px #081227, 0 16px 34px rgba(0,0,0,.65); transform-origin: top right; animation: menuCrece .2s cubic-bezier(.25,1.25,.4,1) .15s both, menuAparece .12s linear .15s both; }' +
+    '.menu-capa[hidden], .menu-ph[hidden], .menu-burbuja[hidden] { display: none; }' +
+    '@keyframes menuCrece { from { transform: scale(.2); } to { transform: scale(1); } }' +
     '@keyframes menuAparece { from { opacity: 0; } to { opacity: 1; } }' +
+    // al cerrar: primero se encoge el menú y luego las burbujas (12, 8 y 5px), con 40ms entre cada pieza
+    '.menu-ph.cerrando { animation: menuSeCierra .12s ease-in both; pointer-events: none; }' +
+    '@keyframes menuSeCierra { from { transform: scale(1); opacity: 1; } to { transform: scale(.2); opacity: 0; } }' +
+    // tres burbujas entre el botón y el menú
+    '.menu-burbuja { position: fixed; z-index: 3000; border-radius: 50%; background: linear-gradient(180deg,#2a4573,#1f3560); box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 0 1px #081227, 0 4px 8px rgba(0,0,0,.5); pointer-events: none; animation: burbujaCrece .14s cubic-bezier(.3,1.7,.5,1) both; }' +
+    '.menu-burbuja.cerrando { animation: burbujaSeCierra .1s ease-in both; }' +
+    '@keyframes burbujaCrece { from { transform: scale(0); } to { transform: scale(1); } }' +
+    '@keyframes burbujaSeCierra { from { transform: scale(1); } to { transform: scale(0); } }' +
     '.menu-fila { position: relative; overflow: hidden; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 13px; padding: 10px 12px; border: none; border-radius: 13px; background: none; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }' +
     '.menu-icono { flex: 0 0 40px; box-sizing: border-box; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: #0f1d3a; border: 1px solid #081227; box-shadow: inset 0 2px 5px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.07); color: #8f9bb3; }' +
     '.menu-icono svg { display: block; width: 21px; height: 21px; }' +
@@ -2908,43 +2922,96 @@ document.addEventListener('DOMContentLoaded', function() {
     fila('guia', AYUDA, 'Cómo usar la app', 'Una guía rápida y sencilla') +
     '<div class="menu-sep" role="separator"></div>' +
     fila('contacto', CHAT, 'Contactar a la pulpería', 'Escribirnos por WhatsApp');
+  var BURBUJAS = [5, 8, 12], TRAMOS = [.22, .52, .82];   // diámetros desde el botón, y en qué parte del camino va cada una
+  var burbujas = BURBUJAS.map(function() {
+    var e = document.createElement('div');
+    e.className = 'menu-burbuja'; e.setAttribute('aria-hidden', 'true'); e.hidden = true;
+    return e;
+  });
   document.body.appendChild(capa);
   document.body.appendChild(menu);
+  burbujas.forEach(function(e) { document.body.appendChild(e); });
 
-  // justo debajo de los puntitos (6px), con el borde derecho alineado con el de la barra de búsqueda
+  // el borde de arriba del menú coincide con el de la barra de búsqueda (no tapa el nombre) y el menú queda centrado
   function ubicar() {
-    var b = boton.getBoundingClientRect(), barra = document.querySelector('.search-wrap').getBoundingClientRect();
-    menu.style.top = (b.bottom + 6) + 'px';
-    menu.style.right = (document.documentElement.clientWidth - barra.right) + 'px';
+    var barra = document.querySelector('.search-wrap').getBoundingClientRect();
+    var ancho = menu.offsetWidth, izq = (document.documentElement.clientWidth - ancho) / 2;
+    menu.style.top = barra.top + 'px';
+    menu.style.left = izq + 'px';
+    ubicarBurbujas(izq, barra.top, ancho, menu.offsetHeight);
+  }
+  // en línea recta desde 4px a la izquierda del centro del botón y 2px debajo de él, hasta la esquina redondeada del menú
+  // (5,3px hacia adentro desde arriba y desde la derecha), en el 22, 52 y 82% del camino. Entre una burbuja y la otra,
+  // y entre la última y el menú, quedan al menos 2px: si no caben, las tres se achican en la misma proporción
+  function ubicarBurbujas(izq, arriba, ancho, alto) {
+    var b = boton.getBoundingClientRect();
+    var sx = b.left + b.width / 2 - 4, sy = b.bottom + 2, ex = izq + ancho - 5.3, ey = arriba + 5.3;
+    var c = TRAMOS.map(function(t) { return [sx + (ex - sx) * t, sy + (ey - sy) * t]; });
+    function dist(p, q) { return Math.hypot(p[0] - q[0], p[1] - q[1]); }
+    // distancia del centro de la última burbuja al borde del menú (rectángulo con esquinas redondeadas de 18px)
+    var R = 18, qx = Math.abs(c[2][0] - (izq + ancho / 2)) - (ancho / 2 - R), qy = Math.abs(c[2][1] - (arriba + alto / 2)) - (alto / 2 - R);
+    var alMenu = Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - R;
+    var escala = Math.min(1,
+      (dist(c[0], c[1]) - 2) / ((BURBUJAS[0] + BURBUJAS[1]) / 2),
+      (dist(c[1], c[2]) - 2) / ((BURBUJAS[1] + BURBUJAS[2]) / 2),
+      (alMenu - 2) / (BURBUJAS[2] / 2));
+    escala = Math.max(0, Math.floor(escala * 1000) / 1000);
+    burbujas.forEach(function(e, i) {
+      var d = BURBUJAS[i] * escala;
+      e.style.width = e.style.height = d + 'px';
+      e.style.left = (c[i][0] - d / 2) + 'px';
+      e.style.top = (c[i][1] - d / 2) + 'px';
+    });
   }
 
   // botón atrás: abrir el menú anota un paso; si se cierra de otra forma, ese paso se borra
-  var abierto = false, pasoAnotado = false, ignorarAtras = false;
+  var abierto = false, pasoAnotado = false, ignorarAtras = false, relojCierre = null, capaTocada = false;
   function abrir() {
     if (abierto) return;
     abierto = true;
-    ubicar();
+    clearTimeout(relojCierre);   // si se estaba cerrando, vuelve a abrirse desde el principio
+    menu.classList.remove('cerrando');
+    // las burbujas aparecen una tras otra (50ms) y a los 150ms nace el menú
+    burbujas.forEach(function(e, i) { e.classList.remove('cerrando'); e.style.animationDelay = (i * 50) + 'ms'; e.hidden = false; });
     capa.hidden = false; menu.hidden = false;
+    ubicar();
     boton.classList.add('abierto'); boton.setAttribute('aria-expanded', 'true');
+    // al borrar el paso de "atrás", la página no vuelve a donde estaba (si se cerró al deslizar, se queda donde quedó)
+    try { history.scrollRestoration = 'manual'; } catch (e) {}
     try { history.pushState({ menuPH: true }, ''); pasoAnotado = true; } catch (e) { pasoAnotado = false; }
     pintarLuces();
   }
   function cerrar(porAtras) {
     if (!abierto) return;
     abierto = false;
-    capa.hidden = true; menu.hidden = true;
+    if (!capaTocada) capa.hidden = true;
+    menu.classList.add('cerrando');
+    burbujas.forEach(function(e, i) { e.style.animationDelay = ((BURBUJAS.length - i) * 40) + 'ms'; e.classList.add('cerrando'); });
+    relojCierre = setTimeout(function() {
+      menu.hidden = true; menu.classList.remove('cerrando');
+      burbujas.forEach(function(e) { e.hidden = true; e.classList.remove('cerrando'); });
+    }, 230);
     boton.classList.remove('abierto'); boton.setAttribute('aria-expanded', 'false');
     if (pasoAnotado && !porAtras) { ignorarAtras = true; history.back(); }
     pasoAnotado = false;
   }
   window.addEventListener('popstate', function() {
+    try { history.scrollRestoration = 'auto'; } catch (e) {}
     if (ignorarAtras) { ignorarAtras = false; return; }
     if (abierto) cerrar(true);
   });
   window.addEventListener('resize', function() { if (abierto) ubicar(); });
+  // si la página se desplaza por cualquier motivo, el menú se cierra
+  window.addEventListener('scroll', function() { if (abierto) cerrar(false); }, { passive: true });
 
   boton.addEventListener('click', function() { if (abierto) cerrar(false); else abrir(); });
-  capa.addEventListener('click', function(ev) { ev.preventDefault(); ev.stopPropagation(); cerrar(false); });
+  // un toque afuera cierra el menú apenas el dedo toca la pantalla (también al empezar a deslizar los productos).
+  // La capa se queda hasta que termina ese toque, para que no active lo que hay debajo
+  function soltarCapa() { capaTocada = false; if (!abierto) capa.hidden = true; }
+  capa.addEventListener('pointerdown', function() { capaTocada = true; cerrar(false); });
+  capa.addEventListener('pointercancel', soltarCapa);   // empezó a deslizar: no habrá toque
+  capa.addEventListener('pointerup', function() { setTimeout(function() { if (capaTocada) soltarCapa(); }, 400); });
+  capa.addEventListener('click', function(ev) { ev.preventDefault(); ev.stopPropagation(); soltarCapa(); });
 
   // onda de luz desde donde se tocó (o desde el centro, con teclado)
   menu.addEventListener('pointerdown', function(ev) {
