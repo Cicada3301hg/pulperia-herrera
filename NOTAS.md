@@ -50,3 +50,45 @@ Hoy la usa solo su dueño.
   no hay bloqueo en la app. Se decidió no cambiarlo por ahora (riesgo de agregar productos por error
   al hacer scroll). Solo se retoma con demo previa.
 - Revisar el campo `purpose` de los íconos si se ven recortados en el teléfono.
+
+## 6. Cómo trabaja el dueño
+
+### Forma de trabajo
+
+- Dicta por voz: sus mensajes pueden traer errores de transcripción, palabras repetidas o frases cortadas.
+  Interpretar la intención, sin corregir la forma de escribir.
+- No escribe código: decide el diseño y las IA lo ejecutan. Trabaja casi todo desde el teléfono,
+  con el chat de Claude y Claude Code en modo remoto.
+- Analiza los cambios en su cabeza y decide de a uno; el chat agrupa los cambios pequeños en UNA sola orden
+  para Claude Code, para cuidar el límite semanal de uso. "Un paso a la vez" significa que él decide de a uno,
+  no que se construya de a uno.
+- Cambios visuales: primero 3 demos que pueda abrir, él elige, y recién después se prepara la orden.
+  No dar código antes de que lo pida.
+- El chat redacta las órdenes exactas para Claude Code y él las pega. Siempre indicarle dónde pegar
+  ("ahí mismo donde parpadea el cursor"). Él aprueba las ediciones con "Permitir una vez".
+- Revisa en su teléfono cada cambio y manda capturas, a veces con círculos rojos para marcar
+  lo que no le gusta.
+
+### Cómo hablarle
+
+- Trato serio y respetuoso. Nunca "mae" ni tono coloquial de confianza.
+- Lenguaje simple. Si algo es enredado, dirá que no entiende: explicarlo paso a paso, más sencillo.
+- Honestidad ante todo: decir claramente lo que no se pudo probar o no se sabe, y discrepar con respeto
+  y con razones si hace falta.
+- Una sola pregunta a la vez. Respuestas cortas, pensadas para pantalla de teléfono.
+- No recordarle el producto de prueba del catálogo: ya lo sabe y lo quitará él.
+
+### Criterio de diseño
+
+- Debe verse profesional y coherente, no solo funcionar.
+- Equilibrio visual: todo pesa igual a ambos lados del eje central (simetría).
+- Cada elemento debe ser necesario; lo que no sirve, no debe estar. Evitar avisos flotantes si el estado
+  se puede ver en el propio elemento.
+- Estilo que le gusta: paneles oscuros con relieve, controles hundidos, pantallas de puntos, luces tipo LED,
+  interruptores con perilla, azul marino con dorado y verde.
+- No le gustan las pantallas hechas de cajitas tipo formulario ni los fondos con brillo en el centro.
+- Los textos que ven los clientes deben ser amables y no imperativos.
+- Es muy detallista: nota diferencias de pocos píxeles, líneas que sobran y espacios desiguales.
+- Si algo no le convence del todo, a veces da libertad para rehacerlo, pero se conservan las decisiones
+  ya tomadas (sección 3).
+- Antes de recomendarle una herramienta nueva, indicar sus límites y riesgos reales.
