@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pulperia-v22';
+const CACHE_NAME = 'pulperia-v23';
 const ESPERA_RED_MS = 4000;   // si la red tarda más que esto y ya hay copia guardada, se usa la copia
 const urlsToCache = [
   './',

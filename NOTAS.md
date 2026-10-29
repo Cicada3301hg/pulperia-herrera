@@ -56,13 +56,19 @@ Hoy la usa solo su dueño.
   nombre–barra (15 px a 390 px y 14,5 px a 320 px; margen bajo el nombre de 7 px).
 - Al escribir en la búsqueda, la vista sube al inicio de los resultados y se corrige
   el corrimiento que deja el teclado abierto.
+- Sin selección de texto: en toda la app, mantener presionado un texto o número no lo selecciona ni muestra
+  "Copiar / Seleccionar todo" (user-select: none y -webkit-touch-callout: none en `body`). Excepción: la
+  búsqueda y los campos donde se escribe (input y textarea) sí permiten seleccionar, copiar y pegar.
+- Las fotos (tarjetas, ventana de cantidad, carrito y foto ampliada) no se arrastran ni abren el menú de Chrome
+  al mantenerlas presionadas (-webkit-touch-callout: none, -webkit-user-drag: none y se bloquea el evento
+  contextmenu solo en las imágenes).
 
 ## 4. Instalación (PWA)
 
 - `index.html` debe tener `<link rel="manifest" href="manifest.json">` (sin él, Chrome no permite instalar).
 - `manifest.json`: `short_name` "Mi Pul".
 - Cada vez que cambia `sw.js` o algo que el teléfono guarda en caché, se sube la versión del caché
-  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v22**.
+  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v23**.
 
 ## 5. Pendientes
 

@@ -333,6 +333,12 @@ body.modal-open .dock{transform:translateY(100%);opacity:0;}
 .pm-eliminar.hidden { display: none; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Mantener presionado no selecciona texto ni abre "Copiar / Seleccionar todo"; en los campos donde se escribe sí se puede */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+/* Las fotos no se arrastran ni abren el menú de Chrome para descargar o compartir */
+img { -webkit-touch-callout: none; -webkit-user-drag: none; }
 </style>
 </head>
 <body>
@@ -3069,6 +3075,11 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   pintarLuces();
 })();
+
+// Mantener presionada una foto no abre el menú de Chrome (solo en las fotos; lo demás queda igual)
+document.addEventListener('contextmenu', function(ev) {
+  if (ev.target && ev.target.tagName === 'IMG') ev.preventDefault();
+});
 </script>
 </body>
 </html>
