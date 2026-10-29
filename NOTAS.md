@@ -24,10 +24,12 @@ Hoy la usa solo su dueño.
 - Encabezado apilado y centrado: casita dorada (30 px) con líneas doradas a los lados;
   debajo, el nombre en letra Cinzel con efecto 3D.
 - Barra de búsqueda hundida, más clara para que se note el hundido (55 px de alto): lupa dorada sola,
-  sin círculo, a la izquierda; a la derecha, la X (si hay texto escrito) o el botón del historial
-  (si la barra está vacía y hay pedidos guardados). El texto de ayuda y el texto escrito van
-  alineados a la izquierda.
-- Botón del historial: redondo de 41 px con relieve, reloj verde de 23 px; al presionarlo se hunde.
+  sin círculo, a la izquierda; a la derecha, solo la X (si hay texto escrito). Se quitó el botón
+  del reloj de la barra. El texto de ayuda y el texto escrito van alineados a la izquierda.
+- Menú de tres puntitos a la derecha del encabezado, a la altura de la casita: "Historial"
+  (abre Mis pedidos), "Cómo usar la app" y "Contactar a la pulpería". El historial ahora se abre
+  desde este menú. El botón atrás del teléfono cierra el menú.
+- Mis pedidos sin pedidos guardados muestra "Aún no hay pedidos guardados".
 - Modal "Tu pedido": pantalla de puntos verdes compacta, con el título dentro y sin la regla de rayitas.
 - "Mis pedidos": tarjetas que se despliegan (una abierta a la vez) e interruptor
   "Desliza para restablecer", que se completa al pasar la mitad del recorrido.
@@ -41,7 +43,7 @@ Hoy la usa solo su dueño.
 - `index.html` debe tener `<link rel="manifest" href="manifest.json">` (sin él, Chrome no permite instalar).
 - `manifest.json`: `short_name` "Mi Pul".
 - Cada vez que cambia `sw.js` o algo que el teléfono guarda en caché, se sube la versión del caché
-  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v18**.
+  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v19**.
 
 ## 5. Pendientes
 
@@ -53,6 +55,8 @@ Hoy la usa solo su dueño.
   no hay bloqueo en la app. Se decidió no cambiarlo por ahora (riesgo de agregar productos por error
   al hacer scroll). Solo se retoma con demo previa.
 - Revisar el campo `purpose` de los íconos si se ven recortados en el teléfono.
+- Programar "Cómo usar la app" y "Contactar a la pulpería" del menú de tres puntitos
+  (por ahora solo cierran el menú).
 
 ## 6. Cómo trabaja el dueño
 

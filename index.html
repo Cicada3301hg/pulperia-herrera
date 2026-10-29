@@ -94,7 +94,7 @@ body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 .search-input {
   width: 100%; height: 100%;
   border: none; background: transparent; border-radius: 14px;
-  padding: 0 56px 0 50px;   /* a la derecha: el texto termina 8px antes del botón del reloj */
+  padding: 0 50px;
   font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 500;
   color: var(--ink); text-align: left;
   outline: none; -webkit-appearance: none; appearance: none;
@@ -2533,16 +2533,6 @@ document.addEventListener('DOMContentLoaded', function() {
 (function() {
   var HISTORIAL_KEY = 'historial_ph_v1';
   var MAX_PEDIDOS = 10;
-  var estilo = document.createElement('style');
-  estilo.textContent =
-    // botón del historial dentro de la barra: redondo de 41px con relieve, a 7px del borde derecho; al presionarlo se hunde
-    '.hist-btn { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 41px; height: 41px; padding: 0; border: none; border-radius: 50%; background: linear-gradient(160deg, #26406f 0%, #182b50 55%, #101e3a 100%); color: #3fcf7a; cursor: pointer; box-shadow: inset 0 1.5px 0 rgba(255,255,255,.18), inset 0 -2px 3px rgba(0,0,0,.35), 0 0 0 1px #07101f, 0 4px 7px rgba(0,0,0,.6); transition: transform .08s, background .08s, box-shadow .08s; z-index: 2; }' +
-    '.hist-btn:active { background: #13223d; box-shadow: inset 0 3px 6px rgba(0,0,0,.65), 0 0 0 1px #07101f; transform: translateY(-50%) scale(.97); }' +
-    '.hist-btn[hidden] { display: none; }' +
-    // con texto escrito se ve la X y el reloj se esconde; al borrar, vuelve (si hay pedidos)
-    '.search-clear:not([hidden]) ~ .hist-btn { display: none; }' +
-    '.hist-btn:focus-visible { outline: 1px solid #d4a64a; outline-offset: 2px; }';
-  document.head.appendChild(estilo);
 
   function leerHistorial() {
     try {
@@ -2554,16 +2544,6 @@ document.addEventListener('DOMContentLoaded', function() {
     try { localStorage.setItem(HISTORIAL_KEY, JSON.stringify(lista.slice(0, MAX_PEDIDOS))); } catch (e) {}
   }
 
-  // el botón: solo se ve si hay pedidos guardados
-  var botonHistorial = document.createElement('button');
-  botonHistorial.type = 'button';
-  botonHistorial.className = 'hist-btn';
-  botonHistorial.setAttribute('aria-label', 'Mis pedidos');
-  botonHistorial.innerHTML = '<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><polyline points="3 4 3 9 8 9"></polyline><polyline points="12 7 12 12 15 14"></polyline></svg>';
-  document.querySelector('.search-wrap').appendChild(botonHistorial);
-  function refrescarBoton() { botonHistorial.hidden = leerHistorial().length === 0; }
-  refrescarBoton();
-
   // ---- Guardar el pedido al tocar "Enviar por WhatsApp" (solo si el pedido salió: con nombre y forma de pago) ----
   var enviarPedidoAnterior = enviarPedido;
   enviarPedido = function() {
@@ -2573,7 +2553,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var lista = leerHistorial();
     lista.unshift({ fecha: Date.now(), items: copia });
     guardarHistorial(lista);
-    refrescarBoton();
   };
 
   // ---- La ventana "Mis pedidos": la fecha, y de cada producto el nombre y la cantidad (sin precios ni total) ----
@@ -2610,7 +2589,9 @@ document.addEventListener('DOMContentLoaded', function() {
     '.hist-item.no-esta .hist-cant, .hist-item.no-esta .hist-nombre { color: #7D8493; }' +
     '#modalHistorial .cart-total { padding: 6px 22px calc(12px + env(safe-area-inset-bottom, 0px)); background: none; border-top: none; }' +
     '#modalHistorial .cart-total::before { display: none; }' +
-    '#modalHistorial .btn-cerrar-secondary { width: 100%; background: none; border: none; box-shadow: none; padding: 13px 10px 6px; font-size: 14px; font-weight: 600; color: var(--ink-soft); }';
+    '#modalHistorial .btn-cerrar-secondary { width: 100%; background: none; border: none; box-shadow: none; padding: 13px 10px 6px; font-size: 14px; font-weight: 600; color: var(--ink-soft); }' +
+    // sin pedidos guardados: solo un texto centrado
+    '.hist-vacio { padding: 24px 0 4px; text-align: center; font-family: \'Inter\', sans-serif; font-size: 15px; font-weight: 400; color: #8f9bb3; }';
   document.head.appendChild(estiloVentana);
 
   document.body.insertAdjacentHTML('beforeend',
@@ -2634,6 +2615,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function pintarHistorial() {
     cuerpoHist.innerHTML = '';
+    if (leerHistorial().length === 0) {
+      cuerpoHist.removeAttribute('data-esperando');
+      cuerpoHist.innerHTML = '<div class="hist-vacio">Aún no hay pedidos guardados</div>';
+      return;
+    }
     if (!productos.length) {
       cuerpoHist.setAttribute('data-esperando', '1');
       cuerpoHist.innerHTML = '<div class="loading"><div class="spinner"></div>El catálogo está cargando, un momento por favor.</div>';
@@ -2692,7 +2678,8 @@ document.addEventListener('DOMContentLoaded', function() {
     ventana.classList.remove('show');
     if (!hayModalAbierto()) desbloquearScroll();
   }
-  botonHistorial.addEventListener('click', abrirHistorial);
+  // se abre desde el menú de tres puntitos del encabezado
+  window.abrirHistorialPedidos = abrirHistorial;
   document.getElementById('histCerrar').addEventListener('click', cerrarHistorial);
   ventana.addEventListener('click', function(ev) { if (ev.target === ventana) cerrarHistorial(); });
 
@@ -2859,6 +2846,126 @@ document.addEventListener('DOMContentLoaded', function() {
       if (estado === 'aviso' && Date.now() - completadoEn > 400) irAlCarrito();
     });
   }
+})();
+// ===== Menú de tres puntitos en el encabezado: Historial, Cómo usar la app y Contactar a la pulpería =====
+(function() {
+  var estilo = document.createElement('style');
+  estilo.textContent =
+    // el botón no ocupa lugar: la casita, las líneas y el nombre no se mueven. Centrado en alto con la casita (20px + 30px/2);
+    // el borde derecho de los puntitos queda 2px por dentro del borde derecho de la barra de búsqueda
+    '.menu-btn { position: absolute; top: 15px; right: calc(max(16px, (100% - 720px) / 2) - 15.9px); width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: none; border-radius: 50%; background: transparent; color: #8f9bb3; cursor: pointer; -webkit-tap-highlight-color: transparent; }' +
+    '.menu-btn svg { display: block; width: 24px; height: 24px; }' +
+    '.menu-btn.abierto { background: rgba(255,255,255,.09); color: #e9edf5; }' +
+    // capa invisible: un toque afuera cierra el menú sin activar lo de abajo
+    '.menu-capa { position: fixed; inset: 0; z-index: 2999; background: transparent; }' +
+    '.menu-ph { position: fixed; z-index: 3000; box-sizing: border-box; width: min(290px, calc(100vw - 32px)); padding: 6px; border-radius: 18px; background: linear-gradient(180deg,#26406b,#1c3057); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 1px #081227, 0 16px 34px rgba(0,0,0,.65); transform-origin: top right; animation: menuCrece .16s cubic-bezier(.2,.9,.3,1), menuAparece .12s linear; }' +
+    '.menu-capa[hidden], .menu-ph[hidden] { display: none; }' +
+    '@keyframes menuCrece { from { transform: scale(.6); } to { transform: scale(1); } }' +
+    '@keyframes menuAparece { from { opacity: 0; } to { opacity: 1; } }' +
+    '.menu-fila { position: relative; overflow: hidden; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 13px; padding: 10px 12px; border: none; border-radius: 13px; background: none; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }' +
+    '.menu-icono { flex: 0 0 40px; box-sizing: border-box; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: #0f1d3a; border: 1px solid #081227; box-shadow: inset 0 2px 5px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.07); color: #8f9bb3; }' +
+    '.menu-icono svg { display: block; width: 21px; height: 21px; }' +
+    '.menu-textos { display: flex; flex-direction: column; gap: 2px; min-width: 0; }' +
+    '.menu-titulo { font-family: \'Inter\', sans-serif; font-size: 15.5px; font-weight: 600; line-height: 1.25; color: #e9edf5; white-space: nowrap; }' +
+    '.menu-desc { font-family: \'Inter\', sans-serif; font-size: 12.5px; font-weight: 400; line-height: 1.3; color: #8f9bb3; }' +
+    '.menu-sep { height: 1px; margin: 4px 12px; background: rgba(255,255,255,.08); }' +
+    // onda de luz al tocar un renglón
+    '.menu-onda { position: absolute; border-radius: 50%; background: rgba(255,255,255,.16); transform: scale(0); pointer-events: none; animation: menuOnda .45s ease-out forwards; }' +
+    '@keyframes menuOnda { to { transform: scale(1); opacity: 0; } }';
+  document.head.appendChild(estilo);
+
+  var RELOJ = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><polyline points="3 4 3 9 8 9"></polyline><polyline points="12 7 12 12 15 14"></polyline></svg>';
+  var AYUDA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9"/><path d="M12 17.2h.01"/></svg>';
+  var CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12z"/></svg>';
+  function fila(accion, icono, titulo, desc) {
+    return '<button type="button" class="menu-fila" role="menuitem" data-accion="' + accion + '"><span class="menu-icono" aria-hidden="true">' + icono + '</span>' +
+      '<span class="menu-textos"><span class="menu-titulo">' + titulo + '</span><span class="menu-desc">' + desc + '</span></span></button>';
+  }
+
+  var boton = document.createElement('button');
+  boton.type = 'button';
+  boton.className = 'menu-btn';
+  boton.setAttribute('aria-label', 'Más opciones');
+  boton.setAttribute('aria-haspopup', 'menu');
+  boton.setAttribute('aria-expanded', 'false');
+  boton.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="12" cy="19" r="2.1"/></svg>';
+  document.getElementById('header').appendChild(boton);
+
+  var capa = document.createElement('div');
+  capa.className = 'menu-capa';
+  capa.hidden = true;
+  var menu = document.createElement('div');
+  menu.className = 'menu-ph';
+  menu.setAttribute('role', 'menu');
+  menu.hidden = true;
+  menu.innerHTML = fila('historial', RELOJ, 'Historial', 'Sus pedidos anteriores') +
+    fila('guia', AYUDA, 'Cómo usar la app', 'Una guía rápida y sencilla') +
+    '<div class="menu-sep" role="separator"></div>' +
+    fila('contacto', CHAT, 'Contactar a la pulpería', 'Escribirnos por WhatsApp');
+  document.body.appendChild(capa);
+  document.body.appendChild(menu);
+
+  // justo debajo de los puntitos (6px), con el borde derecho alineado con el de la barra de búsqueda
+  function ubicar() {
+    var b = boton.getBoundingClientRect(), barra = document.querySelector('.search-wrap').getBoundingClientRect();
+    menu.style.top = (b.bottom + 6) + 'px';
+    menu.style.right = (document.documentElement.clientWidth - barra.right) + 'px';
+  }
+
+  // botón atrás: abrir el menú anota un paso; si se cierra de otra forma, ese paso se borra
+  var abierto = false, pasoAnotado = false, ignorarAtras = false;
+  function abrir() {
+    if (abierto) return;
+    abierto = true;
+    ubicar();
+    capa.hidden = false; menu.hidden = false;
+    boton.classList.add('abierto'); boton.setAttribute('aria-expanded', 'true');
+    try { history.pushState({ menuPH: true }, ''); pasoAnotado = true; } catch (e) { pasoAnotado = false; }
+  }
+  function cerrar(porAtras) {
+    if (!abierto) return;
+    abierto = false;
+    capa.hidden = true; menu.hidden = true;
+    boton.classList.remove('abierto'); boton.setAttribute('aria-expanded', 'false');
+    if (pasoAnotado && !porAtras) { ignorarAtras = true; history.back(); }
+    pasoAnotado = false;
+  }
+  window.addEventListener('popstate', function() {
+    if (ignorarAtras) { ignorarAtras = false; return; }
+    if (abierto) cerrar(true);
+  });
+  window.addEventListener('resize', function() { if (abierto) ubicar(); });
+
+  boton.addEventListener('click', function() { if (abierto) cerrar(false); else abrir(); });
+  capa.addEventListener('click', function(ev) { ev.preventDefault(); ev.stopPropagation(); cerrar(false); });
+
+  // onda de luz desde donde se tocó (o desde el centro, con teclado)
+  menu.addEventListener('pointerdown', function(ev) {
+    var f = ev.target.closest('.menu-fila');
+    if (!f) return;
+    var r = f.getBoundingClientRect(), lado = Math.max(r.width, r.height) * 2;
+    var onda = document.createElement('span');
+    onda.className = 'menu-onda';
+    onda.style.width = onda.style.height = lado + 'px';
+    onda.style.left = (ev.clientX - r.left - lado / 2) + 'px';
+    onda.style.top = (ev.clientY - r.top - lado / 2) + 'px';
+    f.appendChild(onda);
+    setTimeout(function() { onda.remove(); }, 460);
+  });
+  var eligiendo = false;
+  menu.addEventListener('click', function(ev) {
+    var f = ev.target.closest('.menu-fila');
+    if (!f || eligiendo) return;
+    eligiendo = true;
+    var accion = f.getAttribute('data-accion');
+    // se deja ver la onda un instante antes de cerrar
+    setTimeout(function() {
+      eligiendo = false;
+      cerrar(false);
+      if (accion === 'historial') window.abrirHistorialPedidos();
+      // 'guia' y 'contacto': por ahora solo cierran el menú
+    }, 180);
+  });
 })();
 </script>
 </body>
