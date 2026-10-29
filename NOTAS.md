@@ -46,5 +46,7 @@ Hoy la usa solo su dueño.
 - Pulir el resto de línea en Mis pedidos.
 - Completar los nombres con sabor en la columna H del catálogo (es el nombre que la app muestra).
 - Registro de búsquedas sin resultado (requiere computadora).
-- Tocar dos productos a la vez (en estudio).
+- Tocar dos productos a la vez. Revisado: es una limitación de Chrome con dos dedos simultáneos,
+  no hay bloqueo en la app. Se decidió no cambiarlo por ahora (riesgo de agregar productos por error
+  al hacer scroll). Solo se retoma con demo previa.
 - Revisar el campo `purpose` de los íconos si se ven recortados en el teléfono.
