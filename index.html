@@ -75,8 +75,9 @@ body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 .header-casa svg { display: block; flex-shrink: 0; }
 .header-casa-linea { flex: 1; max-width: 100px; height: 1px; background: linear-gradient(90deg, transparent, #d4a64a); }
 .header-casa-linea.der { background: linear-gradient(90deg, #d4a64a, transparent); }
-.header-top { display: flex; align-items: center; justify-content: center; margin-bottom: 12px; max-width: 720px; margin-left: auto; margin-right: auto; }
-.header-brand { font-family: 'Cinzel', Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; letter-spacing: 1.2px; white-space: nowrap; color: #f6f8fc; text-shadow: 0 1px 0 #c3ccdf, 0 2px 0 #a3b0cc, 0 3px 0 #8493b6, 0 4px 0 #65759d, 0 5px 0 #4a5a82, 0 9px 8px rgba(0,0,0,.5); }
+.header-top { display: flex; align-items: center; justify-content: center; margin-bottom: 7.5px; max-width: 720px; margin-left: auto; margin-right: auto; }
+/* nombre negro con filo dorado: a la vista quedan 14px entre las letras y la barra, igual que entre la casita y el nombre */
+.header-brand { font-family: 'Cinzel', Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; letter-spacing: 1.2px; white-space: nowrap; color: #080d19; -webkit-text-stroke: 1.5px #d4a64a; paint-order: stroke fill; text-shadow: 0 3px 6px rgba(0,0,0,.65); }
 /* pantallas angostas: el nombre un poco más chico para que quepa en una sola línea */
 @media (max-width: 340px) { .header-brand { font-size: 18px; letter-spacing: 1px; } }
 

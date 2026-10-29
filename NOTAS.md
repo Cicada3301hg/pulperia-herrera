@@ -22,7 +22,8 @@ Hoy la usa solo su dueño.
 
 - Estilo de panel de control oscuro con relieve: azul marino, dorado y verde.
 - Encabezado apilado y centrado: casita dorada (30 px) con líneas doradas a los lados;
-  debajo, el nombre en letra Cinzel con efecto 3D.
+  debajo, el nombre en letra Cinzel, negro con filo dorado (color #080d19, -webkit-text-stroke 1.5px #d4a64a,
+  paint-order: stroke fill, text-shadow 0 3px 6px rgba(0,0,0,.65)).
 - Barra de búsqueda hundida, más clara para que se note el hundido (55 px de alto): lupa dorada sola,
   sin círculo, a la izquierda; a la derecha, solo la X (si hay texto escrito). Se quitó el botón
   del reloj de la barra. El texto de ayuda y el texto escrito van alineados a la izquierda.
@@ -34,7 +35,8 @@ Hoy la usa solo su dueño.
 - "Mis pedidos": tarjetas que se despliegan (una abierta a la vez) e interruptor
   "Desliza para restablecer", que se completa al pasar la mitad del recorrido.
 - Ícono verde del carrito centrado en la foto del producto al tocar una tarjeta.
-- Espacios iguales de 14 px entre las partes del encabezado.
+- Espacios iguales de 14 px entre las partes del encabezado. Con el filo dorado, a la vista quedan iguales
+  casita–nombre y nombre–barra (13,5 px a 390 px y 13 px a 320 px).
 - Al escribir en la búsqueda, la vista sube al inicio de los resultados y se corrige
   el corrimiento que deja el teclado abierto.
 
@@ -43,7 +45,7 @@ Hoy la usa solo su dueño.
 - `index.html` debe tener `<link rel="manifest" href="manifest.json">` (sin él, Chrome no permite instalar).
 - `manifest.json`: `short_name` "Mi Pul".
 - Cada vez que cambia `sw.js` o algo que el teléfono guarda en caché, se sube la versión del caché
-  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v19**.
+  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v20**.
 
 ## 5. Pendientes
 
