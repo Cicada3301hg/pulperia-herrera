@@ -23,20 +23,25 @@ Hoy la usa solo su dueño.
 - Estilo de panel de control oscuro con relieve: azul marino, dorado y verde.
 - Encabezado apilado y centrado: casita dorada (30 px) con líneas doradas a los lados;
   debajo, el nombre en letra Cinzel, negro con filo dorado (color #080d19, -webkit-text-stroke 1.5px #d4a64a,
-  paint-order: stroke fill, text-shadow 0 3px 6px rgba(0,0,0,.65)).
+  paint-order: stroke fill, text-shadow 0 3px 6px rgba(0,0,0,.65)). Tamaño de letra: 24 px; en pantallas
+  de hasta 340 px, 22,5 px con 1 px entre letras.
 - Barra de búsqueda hundida, más clara para que se note el hundido (55 px de alto): lupa dorada sola,
   sin círculo, a la izquierda; a la derecha, solo la X (si hay texto escrito). Se quitó el botón
   del reloj de la barra. El texto de ayuda y el texto escrito van alineados a la izquierda.
 - Menú de tres puntitos a la derecha del encabezado, a la altura de la casita: "Historial"
   (abre Mis pedidos), "Cómo usar la app" y "Contactar a la pulpería". El historial ahora se abre
   desde este menú. El botón atrás del teléfono cierra el menú.
+- Señal de luz que guía al Historial: con el primer pedido que se guarde se enciende una luz dorada
+  (#f2c35a, 9 px) en el botón de tres puntitos y, con el menú abierto, al final del renglón "Historial".
+  Se apagan para siempre al tocar "Historial"; cerrar el menú sin entrar no las apaga. Sale una sola vez
+  (clave `senal_historial_ph_v1` en el teléfono). Los pedidos guardados antes no la encienden.
 - Mis pedidos sin pedidos guardados muestra "Aún no hay pedidos guardados".
 - Modal "Tu pedido": pantalla de puntos verdes compacta, con el título dentro y sin la regla de rayitas.
 - "Mis pedidos": tarjetas que se despliegan (una abierta a la vez) e interruptor
   "Desliza para restablecer", que se completa al pasar la mitad del recorrido.
 - Ícono verde del carrito centrado en la foto del producto al tocar una tarjeta.
-- Espacios iguales de 14 px entre las partes del encabezado. Con el filo dorado, a la vista quedan iguales
-  casita–nombre y nombre–barra (13,5 px a 390 px y 13 px a 320 px).
+- Espacios iguales entre las partes del encabezado. A la vista quedan iguales casita–nombre y
+  nombre–barra (15 px a 390 px y 14,5 px a 320 px; margen bajo el nombre de 7 px).
 - Al escribir en la búsqueda, la vista sube al inicio de los resultados y se corrige
   el corrimiento que deja el teclado abierto.
 
@@ -45,7 +50,7 @@ Hoy la usa solo su dueño.
 - `index.html` debe tener `<link rel="manifest" href="manifest.json">` (sin él, Chrome no permite instalar).
 - `manifest.json`: `short_name` "Mi Pul".
 - Cada vez que cambia `sw.js` o algo que el teléfono guarda en caché, se sube la versión del caché
-  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v20**.
+  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v21**.
 
 ## 5. Pendientes
 

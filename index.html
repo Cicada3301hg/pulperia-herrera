@@ -75,11 +75,11 @@ body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 .header-casa svg { display: block; flex-shrink: 0; }
 .header-casa-linea { flex: 1; max-width: 100px; height: 1px; background: linear-gradient(90deg, transparent, #d4a64a); }
 .header-casa-linea.der { background: linear-gradient(90deg, #d4a64a, transparent); }
-.header-top { display: flex; align-items: center; justify-content: center; margin-bottom: 7.5px; max-width: 720px; margin-left: auto; margin-right: auto; }
-/* nombre negro con filo dorado: a la vista quedan 14px entre las letras y la barra, igual que entre la casita y el nombre */
-.header-brand { font-family: 'Cinzel', Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; letter-spacing: 1.2px; white-space: nowrap; color: #080d19; -webkit-text-stroke: 1.5px #d4a64a; paint-order: stroke fill; text-shadow: 0 3px 6px rgba(0,0,0,.65); }
+.header-top { display: flex; align-items: center; justify-content: center; margin-bottom: 7px; max-width: 720px; margin-left: auto; margin-right: auto; }
+/* nombre negro con filo dorado: a la vista queda el mismo espacio entre las letras y la barra que entre la casita y el nombre */
+.header-brand { font-family: 'Cinzel', Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; letter-spacing: 1.2px; white-space: nowrap; color: #080d19; -webkit-text-stroke: 1.5px #d4a64a; paint-order: stroke fill; text-shadow: 0 3px 6px rgba(0,0,0,.65); }
 /* pantallas angostas: el nombre un poco más chico para que quepa en una sola línea */
-@media (max-width: 340px) { .header-brand { font-size: 18px; letter-spacing: 1px; } }
+@media (max-width: 340px) { .header-brand { font-size: 22.5px; letter-spacing: 1px; } }
 
 /* ⬇️ BARRA DE BÚSQUEDA HUNDIDA: ranura más clara para que se note el hundido, lupa a la izquierda y X a la derecha, texto a la izquierda */
 .search-wrap {
@@ -2554,6 +2554,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var lista = leerHistorial();
     lista.unshift({ fecha: Date.now(), items: copia });
     guardarHistorial(lista);
+    if (window.encenderSenalHistorial) window.encenderSenalHistorial();   // luz que guía al Historial (menú de tres puntitos)
   };
 
   // ---- La ventana "Mis pedidos": la fecha, y de cada producto el nombre y la cantidad (sin precios ni total) ----
@@ -2872,7 +2873,11 @@ document.addEventListener('DOMContentLoaded', function() {
     '.menu-sep { height: 1px; margin: 4px 12px; background: rgba(255,255,255,.08); }' +
     // onda de luz al tocar un renglón
     '.menu-onda { position: absolute; border-radius: 50%; background: rgba(255,255,255,.16); transform: scale(0); pointer-events: none; animation: menuOnda .45s ease-out forwards; }' +
-    '@keyframes menuOnda { to { transform: scale(1); opacity: 0; } }';
+    '@keyframes menuOnda { to { transform: scale(1); opacity: 0; } }' +
+    // luz que guía al Historial: en el botón (con un anillo del color del encabezado) y al final del renglón "Historial"
+    '.menu-luz { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #f2c35a; box-shadow: 0 0 8px 1px rgba(242,195,90,.85); pointer-events: none; }' +
+    '.menu-btn .menu-luz { top: 3px; right: 3px; box-shadow: 0 0 0 2px #1A2942, 0 0 8px 1px rgba(242,195,90,.85); animation: menuLuz .25s cubic-bezier(.3,1.6,.5,1); }' +
+    '@keyframes menuLuz { from { transform: scale(0); } to { transform: scale(1); } }';
   document.head.appendChild(estilo);
 
   var RELOJ = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><polyline points="3 4 3 9 8 9"></polyline><polyline points="12 7 12 12 15 14"></polyline></svg>';
@@ -2922,6 +2927,7 @@ document.addEventListener('DOMContentLoaded', function() {
     capa.hidden = false; menu.hidden = false;
     boton.classList.add('abierto'); boton.setAttribute('aria-expanded', 'true');
     try { history.pushState({ menuPH: true }, ''); pasoAnotado = true; } catch (e) { pasoAnotado = false; }
+    pintarLuces();
   }
   function cerrar(porAtras) {
     if (!abierto) return;
@@ -2963,10 +2969,38 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
       eligiendo = false;
       cerrar(false);
-      if (accion === 'historial') window.abrirHistorialPedidos();
+      if (accion === 'historial') { anotarSenal('apagada'); pintarLuces(); window.abrirHistorialPedidos(); }
       // 'guia' y 'contacto': por ahora solo cierran el menú
     }, 180);
   });
+
+  // ---- Señal de luz hacia el Historial: se enciende una sola vez, con el primer pedido que se guarde,
+  //      y se apaga para siempre al entrar al Historial (cerrar el menú sin entrar no la apaga) ----
+  var SENAL_KEY = 'senal_historial_ph_v1';   // sin valor: nunca encendida | 'encendida' | 'apagada'
+  function leerSenal() { try { return localStorage.getItem(SENAL_KEY); } catch (e) { return null; } }
+  function anotarSenal(valor) { try { localStorage.setItem(SENAL_KEY, valor); } catch (e) {} }
+  var luzBoton = null, luzFila = null;
+  function nuevaLuz() { var l = document.createElement('span'); l.className = 'menu-luz'; l.setAttribute('aria-hidden', 'true'); return l; }
+  function pintarLuces() {
+    var encendida = leerSenal() === 'encendida';
+    if (encendida && !luzBoton) boton.appendChild(luzBoton = nuevaLuz());
+    if (!encendida && luzBoton) { luzBoton.remove(); luzBoton = null; }
+    if (encendida && abierto) {
+      // va dentro del menú (no del renglón, que recorta la onda) para que el resplandor no se corte;
+      // centrada en alto con "Historial" y a 4px de su borde derecho, sin mover los textos
+      var f = menu.querySelector('.menu-fila[data-accion="historial"]');
+      if (!luzFila) menu.appendChild(luzFila = nuevaLuz());
+      luzFila.style.top = (f.offsetTop + f.offsetHeight / 2 - 4.5) + 'px';
+      luzFila.style.right = (menu.clientWidth - f.offsetLeft - f.offsetWidth + 4) + 'px';
+    }
+    if (!encendida && luzFila) { luzFila.remove(); luzFila = null; }
+  }
+  window.encenderSenalHistorial = function() {
+    if (leerSenal()) return;   // ya salió una vez
+    anotarSenal('encendida');
+    pintarLuces();
+  };
+  pintarLuces();
 })();
 </script>
 </body>
