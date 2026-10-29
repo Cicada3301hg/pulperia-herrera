@@ -23,8 +23,10 @@ Hoy la usa solo su dueño.
 - Estilo de panel de control oscuro con relieve: azul marino, dorado y verde.
 - Encabezado apilado y centrado: casita dorada (30 px) con líneas doradas a los lados;
   debajo, el nombre en letra Cinzel con efecto 3D.
-- Barra de búsqueda hundida: lupa a la izquierda; a la derecha, la X (si hay texto escrito)
+- Barra de búsqueda hundida: lupa a la izquierda, dentro de un círculo hundido igual al del reloj
+  (misma distancia al borde, como un espejo); a la derecha, la X (si hay texto escrito)
   o el reloj del historial (si la barra está vacía y hay pedidos guardados).
+  El texto de ayuda y el texto escrito van alineados a la izquierda.
 - Modal "Tu pedido": pantalla de puntos verdes compacta, con el título dentro y sin la regla de rayitas.
 - "Mis pedidos": tarjetas que se despliegan (una abierta a la vez) e interruptor
   "Desliza para restablecer", que se completa al pasar la mitad del recorrido.
@@ -38,7 +40,7 @@ Hoy la usa solo su dueño.
 - `index.html` debe tener `<link rel="manifest" href="manifest.json">` (sin él, Chrome no permite instalar).
 - `manifest.json`: `short_name` "Mi Pul".
 - Cada vez que cambia `sw.js` o algo que el teléfono guarda en caché, se sube la versión del caché
-  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v16**.
+  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v17**.
 
 ## 5. Pendientes
 

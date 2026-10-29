@@ -1,0 +1,11 @@
+# Archivos con claves o credenciales: nunca se suben al repositorio (es público)
+.env
+.env.*
+.clasp.json
+.clasprc.json
+credentials*.json
+credenciales*.json
+client_secret*.json
+service-account*.json
+*.pem
+*.key
