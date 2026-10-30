@@ -285,7 +285,8 @@ body.modal-open .dock{transform:translateY(100%);opacity:0;}
 .dock .bump::after{display:none !important;}
 .dock .float::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:shine 4.5s ease-in-out infinite;}
 .dock .float{position:absolute;left:50%;bottom:8px;width:var(--bump-w);height:calc(var(--bump-h) - 8px);transform:translateX(-50%);box-sizing:border-box;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse 90% 60% at 50% 0,rgba(255,255,255,.22),rgba(255,255,255,0) 70%),linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.22)),var(--navy);box-shadow:0 0 0 1px rgba(0,0,0,.25),0 8px 12px -2px rgba(0,0,0,.85),0 16px 26px -6px rgba(0,0,0,.65),0 0 14px rgba(0,0,0,.45),inset 0 1.5px 0 rgba(255,255,255,.38),inset 0 -4px 7px rgba(0,0,0,.35);}
-@keyframes shine{0%,60%{left:-60%}100%{left:130%}}
+/* el brillo se corre con transform (no obliga a redibujar): de -60% a 130% del botón = 475% de su propio ancho (40%) */
+@keyframes shine{0%,60%{transform:translateX(0) skewX(-20deg)}100%{transform:translateX(475%) skewX(-20deg)}}
 .dock:has(.content:active) .float{filter:brightness(.9)}
 .dock .bump-wrap::before,.dock .bump-wrap::after{content:"";position:absolute;z-index:-1;bottom:var(--base-h);width:calc(var(--rx) + 1px);height:var(--r)}
 .dock .bump-wrap::before{left:calc(var(--rx) * -1);background:radial-gradient(ellipse var(--rx) var(--r) at 0 0,transparent 98%,transparent 100%)}

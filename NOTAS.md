@@ -71,6 +71,8 @@ Hoy la usa solo su dueño.
   pueden verse más espacios vacíos que antes; se aceptó a cambio del ahorro.
 - Brillo dorado bajo las tarjetas sin desenfoque (sin filter: blur): un degradado más suave en su lugar.
   A la vista es igual (diferencia de 1–2 tonos en pocos píxeles: ese brillo queda casi oculto tras la tarjeta).
+- Brillo de "Hacer pedido": se mueve con transform (translateX) en vez de left, para no redibujar en cada cuadro.
+  Mismo recorrido, misma velocidad (4,5 s) y misma curva.
 
 ## 4. Instalación (PWA)
 
