@@ -69,6 +69,8 @@ Hoy la usa solo su dueño.
   más abajo (12 en vez de 24–26, unos 300 KB menos con red lenta); las demás, al acercarse. Respaldo: si el
   vigilante de fotos falla o no responde en 3 s, todas cargan como antes. Al bajar muy rápido con red lenta
   pueden verse más espacios vacíos que antes; se aceptó a cambio del ahorro.
+- Brillo dorado bajo las tarjetas sin desenfoque (sin filter: blur): un degradado más suave en su lugar.
+  A la vista es igual (diferencia de 1–2 tonos en pocos píxeles: ese brillo queda casi oculto tras la tarjeta).
 
 ## 4. Instalación (PWA)
 
