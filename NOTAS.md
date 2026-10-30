@@ -63,12 +63,19 @@ Hoy la usa solo su dueño.
   al mantenerlas presionadas (-webkit-touch-callout: none, -webkit-user-drag: none y se bloquea el evento
   contextmenu solo en las imágenes).
 
+### Rendimiento (teléfonos modestos)
+
+- Fotos de las tarjetas con una pantalla de ventaja: al abrir solo se piden las de la pantalla y una pantalla
+  más abajo (12 en vez de 24–26, unos 300 KB menos con red lenta); las demás, al acercarse. Respaldo: si el
+  vigilante de fotos falla o no responde en 3 s, todas cargan como antes. Al bajar muy rápido con red lenta
+  pueden verse más espacios vacíos que antes; se aceptó a cambio del ahorro.
+
 ## 4. Instalación (PWA)
 
 - `index.html` debe tener `<link rel="manifest" href="manifest.json">` (sin él, Chrome no permite instalar).
 - `manifest.json`: `short_name` "Mi Pul".
 - Cada vez que cambia `sw.js` o algo que el teléfono guarda en caché, se sube la versión del caché
-  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v23**.
+  en `sw.js` (`CACHE_NAME`). Versión actual: **pulperia-v24**.
 
 ## 5. Pendientes
 

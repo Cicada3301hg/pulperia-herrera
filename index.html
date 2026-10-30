@@ -1786,13 +1786,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   new MutationObserver(function(cambios) {
     cambios.forEach(function(c) {
+      if (c.type === 'attributes') { if (c.target.classList.contains('card-foto')) vigilar(c.target); return; }   // fotos de tarjetas que se piden más tarde
       c.addedNodes.forEach(function(n) {
         if (n.nodeType !== 1) return;
         if (n.tagName === 'IMG') vigilar(n);
         else if (n.querySelectorAll) n.querySelectorAll('img').forEach(vigilar);
       });
     });
-  }).observe(document.body, { childList: true, subtree: true });
+  }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
   document.querySelectorAll('img').forEach(vigilar);
 })();
 // ===== La tarjeta avisa por sí sola: SIN STOCK / AGOTADO, y el stock baja a medida que el cliente agrega =====
@@ -3074,6 +3075,48 @@ document.addEventListener('DOMContentLoaded', function() {
     pintarLuces();
   };
   pintarLuces();
+})();
+
+// ===== Fotos de las tarjetas: al abrir se piden solo las de la pantalla y una pantalla más adelante; las demás, al acercarse =====
+(function() {
+  if (typeof IntersectionObserver === 'undefined') return;   // sin esto, queda la carga diferida del navegador
+  var respondio = false, fallo = false, reloj = null;
+  function poner(img) {
+    if (!img.dataset.foto) return;
+    img.src = img.dataset.foto;
+    delete img.dataset.foto;
+  }
+  // respaldo: si el vigilante falla o no responde en 3 s, todas las fotos se cargan como antes (carga diferida del navegador)
+  function soltarTodas() {
+    fallo = true;
+    try { cerca.disconnect(); } catch (e) {}
+    document.querySelectorAll('img.card-foto[data-foto]').forEach(poner);
+  }
+  var cerca;
+  try {
+    cerca = new IntersectionObserver(function(entradas) {
+      respondio = true;
+      entradas.forEach(function(en) {
+        if (!en.isIntersecting) return;
+        cerca.unobserve(en.target);
+        poner(en.target);
+      });
+    }, { rootMargin: '100% 0px' });   // una pantalla de ventaja arriba y abajo
+  } catch (e) { return; }
+  var crearTarjetaPrevia = crearTarjeta;
+  crearTarjeta = function(p) {
+    var card = crearTarjetaPrevia(p);
+    if (fallo) return card;
+    var img = card.querySelector('img.card-foto');
+    if (!img || !img.getAttribute('src')) return card;
+    try {   // se aparta el enlace antes de que la tarjeta entre a la página
+      img.dataset.foto = img.getAttribute('src');
+      img.removeAttribute('src');
+      cerca.observe(img);
+      if (!respondio && !reloj) reloj = setTimeout(function() { if (!respondio) soltarTodas(); }, 3000);
+    } catch (e) { poner(img); }
+    return card;
+  };
 })();
 
 // Mantener presionada una foto no abre el menú de Chrome (solo en las fotos; lo demás queda igual)
